@@ -482,7 +482,7 @@ void StartDefaultTask(void *argument)
 	  msg.data = 0;
 
 	  osDelay(5000);
-	  uint8_t tx_buff[]="w axis0.requested_state 3\n";
+	  uint8_t tx_buff[]="w axis0.requested_state 3 \n";
 	  HAL_UART_Transmit_IT(&huart2, tx_buff, strlen(tx_buff));
 	  osDelay(60000);
 
