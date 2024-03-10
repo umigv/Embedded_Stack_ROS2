@@ -1,14 +1,15 @@
 #settings
-.settings/
+.settings
 
 #metadata
-.metadata/
+.metadata
 
 #Debug
-Debug/
-debug/
-Release/
-release
+STM32Code/Debug/*
+Debug/*
+debug/*
+Release/*
+release/*
 
 # Prerequisites
 *.d
@@ -50,3 +51,6 @@ release
 *.su
 *.idb
 *.pdb
+
+
+STM32Code/*

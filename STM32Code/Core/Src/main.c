@@ -49,6 +49,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart3_tx;
@@ -72,6 +73,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
+static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -80,7 +82,8 @@ void StartDefaultTask(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint8_t rx_buff[1];
+uint8_t message = 0;
 /* USER CODE END 0 */
 
 /**
@@ -114,8 +117,9 @@ int main(void)
   MX_DMA_Init();
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_UART_Receive_IT(&huart2, rx_buff, 1);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -208,6 +212,39 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
 }
 
 /**
@@ -311,10 +348,10 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
@@ -363,6 +400,18 @@ void microros_deallocate(void * pointer, void * state);
 void * microros_reallocate(void * pointer, size_t size, void * state);
 void * microros_zero_allocate(size_t number_of_elements, size_t size_of_element, void * state);
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  //message = rx_buff[0];
+  HAL_UART_Receive_IT(&huart2, rx_buff, 1); //You need to toggle a breakpoint on this line!
+  //message--;
+}
+
+void subscription_callback(const void * msgin){
+	const std_msgs__msg__Int32 * rec = (const std_msgs__msg__Int32 *)msgin;
+	message = rec->data;
+}
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -398,7 +447,9 @@ void StartDefaultTask(void *argument)
 	  // micro-ROS app
 
 	  rcl_publisher_t publisher;
+	  rcl_subscription_t subscriber;
 	  std_msgs__msg__Int32 msg;
+	  std_msgs__msg__Int32 rec;
 	  rclc_support_t support;
 	  rcl_allocator_t allocator;
 	  rcl_node_t node;
@@ -416,21 +467,47 @@ void StartDefaultTask(void *argument)
 	    &publisher,
 	    &node,
 	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-	    "cubemx_publisher");
+	    "/publisher");
+
+	  // create subscriber
+	  rclc_subscription_init_default(
+	  	    &subscriber,
+	  	    &node,
+	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+	  	    "/subscriber");
+	  rclc_executor_t executor;
+	  rclc_executor_init(&executor, &support.context, 2, &allocator);
+	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
 
 	  msg.data = 0;
 
+	  osDelay(5000);
+	  uint8_t tx_buff[]="w axis0.requested_state 3\n";
+	  HAL_UART_Transmit_IT(&huart2, tx_buff, strlen(tx_buff));
+	  osDelay(60000);
+
 	  for(;;)
 	  {
-	    rcl_ret_t ret = rcl_publish(&publisher, &msg, NULL);
+		  rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+		  msg.data = message;
+		  rcl_ret_t ret = rcl_publish(&publisher, &msg, NULL);
 	    /*
 	    if (ret != RCL_RET_OK)
 	    {
 	      printf("Error publishing (line %d)\n", __LINE__);
 	    }
 		*/
-	    msg.data++;
-	    osDelay(10);
+	    //msg.data++;
+
+	    osDelay(100);
+	    //uint8_t tx_buff[]="arv1\n";//{'a','r','v',message+48,'\n'};
+	    //HAL_UART_Transmit_IT(&huart2, tx_buff, 5);
+	    // send message to calibrate, closed loop control, set velocity (odrive s1)
+	    // to set parameters: w [property] [value]
+	    // 		ex. w axis0.controller.input_pos 1
+	    // calibrate: w odrv0.axis0.requested_state 4 (AxisState.MOTOR_CALIBRATION)
+	    // closed-loop control: w odrv0.axis0.requested_state 8 (AxisState.CLOSED_LOOP_CONTROL)
+	    // set velocity: v (motor 0 or 1) (velocity turns/s)
 	  }
 
   /* USER CODE END 5 */

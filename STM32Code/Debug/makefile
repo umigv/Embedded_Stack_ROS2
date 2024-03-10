@@ -38,23 +38,23 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := uros_test2
+BUILD_ARTIFACT_NAME := STM32Code
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-uros_test2.elf \
+STM32Code.elf \
 
 MAP_FILES += \
-uros_test2.map \
+STM32Code.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-uros_test2.list \
+STM32Code.list \
 
 
 # All Target
@@ -62,11 +62,11 @@ all:
 	+@$(MAKE) --no-print-directory pre-build && $(MAKE) --no-print-directory main-build
 
 # Main-build Target
-main-build: uros_test2.elf secondary-outputs
+main-build: STM32Code.elf secondary-outputs
 
 # Tool invocations
-uros_test2.elf uros_test2.map: $(OBJS) $(USER_OBJS) /home/umarv/STM32CubeIDE/workspace_1.14.0/uros_test2/STM32F446ZETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "uros_test2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/umarv/STM32CubeIDE/workspace_1.14.0/uros_test2/STM32F446ZETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="uros_test2.map" -Wl,--gc-sections -static -L/home/umarv/STM32CubeIDE/workspace_1.14.0/uros_test2/micro_ros_stm32cubemx_utils/microros_static_library_ide/libmicroros --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+STM32Code.elf STM32Code.map: $(OBJS) $(USER_OBJS) /home/umarv/embedded/Embedded_Stack_ROS2/STM32Code/STM32F446ZETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "STM32Code.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/umarv/embedded/Embedded_Stack_ROS2/STM32Code/STM32F446ZETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32Code.map" -Wl,--gc-sections -static -L/home/umarv/STM32CubeIDE/workspace_1.14.0/uros_test2/micro_ros_stm32cubemx_utils/microros_static_library_ide/libmicroros --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -75,18 +75,18 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-uros_test2.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "uros_test2.list"
+STM32Code.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "STM32Code.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) default.size.stdout uros_test2.elf uros_test2.list uros_test2.map
+	-$(RM) STM32Code.elf STM32Code.list STM32Code.map default.size.stdout
 	-@echo ' '
 
 pre-build:
-	docker pull microros/micro_ros_static_library_builder:humble && docker run --rm -v /home/umarv/STM32CubeIDE/workspace_1.14.0/uros_test2:/project --env MICROROS_LIBRARY_FOLDER=micro_ros_stm32cubemx_utils/microros_static_library_ide microros/micro_ros_static_library_builder:humble
+	docker pull microros/micro_ros_static_library_builder:humble && docker run --rm -v /home/umarv/embedded/Embedded_Stack_ROS2/STM32Code:/project --env MICROROS_LIBRARY_FOLDER=micro_ros_stm32cubemx_utils/microros_static_library_ide microros/micro_ros_static_library_builder:humble
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
