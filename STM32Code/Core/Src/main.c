@@ -82,7 +82,7 @@ void StartDefaultTask(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t rx_buff[1];
+float rx_buff[1];
 uint8_t message = 0;
 /* USER CODE END 0 */
 
@@ -404,12 +404,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   //message = rx_buff[0];
   HAL_UART_Receive_IT(&huart2, rx_buff, 1); //You need to toggle a breakpoint on this line!
+  message = (uint8_t)(rx_buff[0]);
   //message--;
 }
 
 void subscription_callback(const void * msgin){
 	const std_msgs__msg__Int32 * rec = (const std_msgs__msg__Int32 *)msgin;
-	message = rec->data;
+	//message = rec->data;
 }
 
 /* USER CODE END 4 */
@@ -481,10 +482,19 @@ void StartDefaultTask(void *argument)
 
 	  msg.data = 0;
 
-	  osDelay(5000);
-	  uint8_t tx_buff[]="w axis0.requested_state 3 \n";
-	  HAL_UART_Transmit_IT(&huart2, tx_buff, strlen(tx_buff));
+	  osDelay(3000);
+	  uint8_t calibrate[]="w axis0.requested_state 3\n";
+	  HAL_UART_Transmit_IT(&huart2, calibrate, strlen(calibrate));
 	  osDelay(60000);
+	  uint8_t closed_loop[]="w axis0.requested_state 8\n";
+	  HAL_UART_Transmit_IT(&huart2, closed_loop, strlen(closed_loop));
+	  osDelay(3000);
+	  uint8_t vel0[]="v 0 15\n";
+	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
+	  uint8_t vel1[]="v 1 1\n";
+	  //HAL_UART_Transmit_IT(&huart2, vel1, strlen(vel1));
+
+	  // to read: r axis0.vel_estimate
 
 	  for(;;)
 	  {
@@ -498,16 +508,12 @@ void StartDefaultTask(void *argument)
 	    }
 		*/
 	    //msg.data++;
-
+		  uint8_t get_vel[]="r axis0.vel_estimate\n";
+		  HAL_UART_Transmit_IT(&huart2, get_vel, strlen(get_vel));
 	    osDelay(100);
 	    //uint8_t tx_buff[]="arv1\n";//{'a','r','v',message+48,'\n'};
 	    //HAL_UART_Transmit_IT(&huart2, tx_buff, 5);
-	    // send message to calibrate, closed loop control, set velocity (odrive s1)
-	    // to set parameters: w [property] [value]
-	    // 		ex. w axis0.controller.input_pos 1
-	    // calibrate: w odrv0.axis0.requested_state 4 (AxisState.MOTOR_CALIBRATION)
-	    // closed-loop control: w odrv0.axis0.requested_state 8 (AxisState.CLOSED_LOOP_CONTROL)
-	    // set velocity: v (motor 0 or 1) (velocity turns/s)
+
 	  }
 
   /* USER CODE END 5 */
