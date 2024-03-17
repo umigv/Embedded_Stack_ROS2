@@ -17,11 +17,14 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#define _GNU_SOURCE
 #include "main.h"
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdlib.h>
+#include <stdio.h>
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
@@ -31,6 +34,7 @@
 #include <rmw_microros/rmw_microros.h>
 
 #include <std_msgs/msg/int32.h>
+#include <std_msgs/msg/float32.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -82,8 +86,8 @@ void StartDefaultTask(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-float rx_buff[1];
-uint8_t message = 0;
+uint8_t rx_buff[4];
+float message = 0;
 /* USER CODE END 0 */
 
 /**
@@ -119,7 +123,7 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart2, rx_buff, 1);
+  HAL_UART_Receive_IT(&huart2, rx_buff, 4);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -400,16 +404,39 @@ void microros_deallocate(void * pointer, void * state);
 void * microros_reallocate(void * pointer, size_t size, void * state);
 void * microros_zero_allocate(size_t number_of_elements, size_t size_of_element, void * state);
 
+float bytes_to_float(uint8_t buff[]){
+	//buff = {0x00,0x00,0x00,0x00};
+	float f;
+	memcpy(&f, buff, sizeof(f));
+	return f;
+
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   //message = rx_buff[0];
-  HAL_UART_Receive_IT(&huart2, rx_buff, 1); //You need to toggle a breakpoint on this line!
-  message = (uint8_t)(rx_buff[0]);
+  HAL_UART_Receive_IT(&huart2, rx_buff, 4); //You need to toggle a breakpoint on this line!
+
+  message = bytes_to_float(rx_buff);//uint8_t)(rx_buff[0]);
   //message--;
 }
 
 void subscription_callback(const void * msgin){
 	const std_msgs__msg__Int32 * rec = (const std_msgs__msg__Int32 *)msgin;
+	uint8_t * vel = "v 0 0\n";
+	/*
+	int length = snprintf(NULL, 0, "%s%d", vel, rec->data)+1;
+	char *newBuffer = malloc(length);
+	snprintf(newBuffer, length, )
+	*/
+	//uint8_t * vel=//fprintf("v 0 %i\n",rec->data);//"v 0 15\n";
+	//uint8_t * vel = "v 0 0\n";
+
+
+	char *msgOut;
+	asprintf(&msgOut, "v 0 %i\n", (int)rec->data);
+
+	HAL_UART_Transmit_IT(&huart2, msgOut, strlen(msgOut));
 	//message = rec->data;
 }
 
@@ -449,7 +476,7 @@ void StartDefaultTask(void *argument)
 
 	  rcl_publisher_t publisher;
 	  rcl_subscription_t subscriber;
-	  std_msgs__msg__Int32 msg;
+	  std_msgs__msg__Float32 msg;
 	  std_msgs__msg__Int32 rec;
 	  rclc_support_t support;
 	  rcl_allocator_t allocator;
@@ -467,7 +494,7 @@ void StartDefaultTask(void *argument)
 	  rclc_publisher_init_default(
 	    &publisher,
 	    &node,
-	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
 	    "/publisher");
 
 	  // create subscriber
