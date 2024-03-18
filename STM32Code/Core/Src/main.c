@@ -86,8 +86,8 @@ void StartDefaultTask(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t rx_buff[4];
-float message = 0;
+uint8_t rx_buff[32];
+char *message;
 /* USER CODE END 0 */
 
 /**
@@ -123,7 +123,7 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart2, rx_buff, 4);
+  HAL_UART_Receive_IT(&huart2, rx_buff, 32);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -403,21 +403,23 @@ void * microros_allocate(size_t size, void * state);
 void microros_deallocate(void * pointer, void * state);
 void * microros_reallocate(void * pointer, size_t size, void * state);
 void * microros_zero_allocate(size_t number_of_elements, size_t size_of_element, void * state);
-
-float bytes_to_float(uint8_t buff[]){
-	//buff = {0x00,0x00,0x00,0x00};
-	float f;
-	memcpy(&f, buff, sizeof(f));
-	return f;
+/*
+char * chars_to_string(uint8_t buff[]){
+	return "hi";
 
 }
+*/
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  //message = rx_buff[0];
-  HAL_UART_Receive_IT(&huart2, rx_buff, 4); //You need to toggle a breakpoint on this line!
+  //maybe receive one character at a time like in arduino
 
-  message = bytes_to_float(rx_buff);//uint8_t)(rx_buff[0]);
+
+
+  //message = rx_buff[0];
+  HAL_UART_Receive_IT(&huart2, rx_buff, 32); //You need to toggle a breakpoint on this line!
+
+  message = rx_buff;//bytes_to_float(rx_buff);//uint8_t)(rx_buff[0]);
   //message--;
 }
 
@@ -535,7 +537,7 @@ void StartDefaultTask(void *argument)
 	    }
 		*/
 	    //msg.data++;
-		  uint8_t get_vel[]="r axis0.vel_estimate\n";
+		  uint8_t get_vel[]="r axis0.pos_vel_mappe r.vel\n";
 		  HAL_UART_Transmit_IT(&huart2, get_vel, strlen(get_vel));
 	    osDelay(100);
 	    //uint8_t tx_buff[]="arv1\n";//{'a','r','v',message+48,'\n'};
