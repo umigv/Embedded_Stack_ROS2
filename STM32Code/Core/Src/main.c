@@ -17,7 +17,6 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#define _GNU_SOURCE
 #include "main.h"
 #include "cmsis_os.h"
 
@@ -55,6 +54,7 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
+UART_HandleTypeDef huart6;
 DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart3_tx;
 
@@ -78,6 +78,7 @@ static void MX_DMA_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_USART6_UART_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -88,6 +89,19 @@ void StartDefaultTask(void *argument);
 /* USER CODE BEGIN 0 */
 uint8_t rx_buff[32];
 char *message;
+
+
+bool wireless_stop = false;
+unsigned long lastData = 0;
+const float WHEEL_BASE = 0.62;
+const float WHEEL_DIAMETER = 0.3;
+const long CONTROL_TIMEOUT = 1000;
+const int LEFT_POLARITY = 1;
+const int RIGHT_POLARITY = -1;
+const float PI = 3.14159265359;
+const float VEL_TO_RPS = 1.0 / (WHEEL_DIAMETER * PI) * 98.0/3.0;
+const float RPS_LIMIT = 20;
+const float  VEL_LIMIT = RPS_LIMIT / VEL_TO_RPS; // 1.2 mph (~0.57 m/s) limit
 /* USER CODE END 0 */
 
 /**
@@ -122,6 +136,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_USART2_UART_Init();
+  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT(&huart2, rx_buff, 32);
   /* USER CODE END 2 */
@@ -285,6 +300,39 @@ static void MX_USART3_UART_Init(void)
 }
 
 /**
+  * @brief USART6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART6_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART6_Init 0 */
+
+  /* USER CODE END USART6_Init 0 */
+
+  /* USER CODE BEGIN USART6_Init 1 */
+
+  /* USER CODE END USART6_Init 1 */
+  huart6.Instance = USART6;
+  huart6.Init.BaudRate = 115200;
+  huart6.Init.WordLength = UART_WORDLENGTH_8B;
+  huart6.Init.StopBits = UART_STOPBITS_1;
+  huart6.Init.Parity = UART_PARITY_NONE;
+  huart6.Init.Mode = UART_MODE_TX_RX;
+  huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart6.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART6_Init 2 */
+
+  /* USER CODE END USART6_Init 2 */
+
+}
+
+/**
   * @brief USB_OTG_FS Initialization Function
   * @param None
   * @retval None
@@ -426,6 +474,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 void subscription_callback(const void * msgin){
 	const std_msgs__msg__Int32 * rec = (const std_msgs__msg__Int32 *)msgin;
 	uint8_t * vel = "v 0 0\n";
+
+	float linear = 0;
+	float angular = rec->data;
+
+	float left_vel = LEFT_POLARITY * (linear - WHEEL_BASE * -1 * angular / 2.0);
+	float right_vel = RIGHT_POLARITY * (linear + WHEEL_BASE * -1 * angular / 2.0);
 	/*
 	int length = snprintf(NULL, 0, "%s%d", vel, rec->data)+1;
 	char *newBuffer = malloc(length);
@@ -436,9 +490,12 @@ void subscription_callback(const void * msgin){
 
 
 	char *msgOut;
-	asprintf(&msgOut, "v 0 %i\n", (int)rec->data);
+	asprintf(&msgOut, "v 0 %i\n", (int)right_vel);
 
 	HAL_UART_Transmit_IT(&huart2, msgOut, strlen(msgOut));
+	asprintf(&msgOut, "v 0 %i\n", (int)left_vel);
+
+	HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut));
 	//message = rec->data;
 }
 
@@ -514,12 +571,15 @@ void StartDefaultTask(void *argument)
 	  osDelay(3000);
 	  uint8_t calibrate[]="w axis0.requested_state 3\n";
 	  HAL_UART_Transmit_IT(&huart2, calibrate, strlen(calibrate));
+	  HAL_UART_Transmit_IT(&huart6, calibrate, strlen(calibrate));
 	  osDelay(60000);
 	  uint8_t closed_loop[]="w axis0.requested_state 8\n";
 	  HAL_UART_Transmit_IT(&huart2, closed_loop, strlen(closed_loop));
+	  HAL_UART_Transmit_IT(&huart6, closed_loop, strlen(closed_loop));
 	  osDelay(3000);
 	  uint8_t vel0[]="v 0 15\n";
 	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
+	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
 	  uint8_t vel1[]="v 1 1\n";
 	  //HAL_UART_Transmit_IT(&huart2, vel1, strlen(vel1));
 
@@ -528,8 +588,8 @@ void StartDefaultTask(void *argument)
 	  for(;;)
 	  {
 		  rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-		  msg.data = message;
-		  rcl_ret_t ret = rcl_publish(&publisher, &msg, NULL);
+		  //msg.data = message;
+		  //rcl_ret_t ret = rcl_publish(&publisher, &msg, NULL);
 	    /*
 	    if (ret != RCL_RET_OK)
 	    {
