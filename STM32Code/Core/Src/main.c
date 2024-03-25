@@ -34,6 +34,7 @@
 
 #include <std_msgs/msg/int32.h>
 #include <std_msgs/msg/float32.h>
+#include <geometry_msgs/msg/twist.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -472,14 +473,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 void subscription_callback(const void * msgin){
-	const std_msgs__msg__Int32 * rec = (const std_msgs__msg__Int32 *)msgin;
+	const geometry_msgs__msg__Twist * rec = (const geometry_msgs__msg__Twist *)msgin;
 	uint8_t * vel = "v 0 0\n";
 
-	float linear = 0;
-	float angular = rec->data;
 
-	float left_vel = LEFT_POLARITY * (linear - WHEEL_BASE * -1 * angular / 2.0);
-	float right_vel = RIGHT_POLARITY * (linear + WHEEL_BASE * -1 * angular / 2.0);
+	float linear = rec->linear.x;
+	float angular = rec->angular.z;
+
+	float left_vel = LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0);
+	float right_vel = RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0);
 	/*
 	int length = snprintf(NULL, 0, "%s%d", vel, rec->data)+1;
 	char *newBuffer = malloc(length);
@@ -536,7 +538,7 @@ void StartDefaultTask(void *argument)
 	  rcl_publisher_t publisher;
 	  rcl_subscription_t subscriber;
 	  std_msgs__msg__Float32 msg;
-	  std_msgs__msg__Int32 rec;
+	  geometry_msgs__msg__Twist rec;
 	  rclc_support_t support;
 	  rcl_allocator_t allocator;
 	  rcl_node_t node;
@@ -560,8 +562,8 @@ void StartDefaultTask(void *argument)
 	  rclc_subscription_init_default(
 	  	    &subscriber,
 	  	    &node,
-	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-	  	    "/subscriber");
+	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
+	  	    "/cmd_vel");
 	  rclc_executor_t executor;
 	  rclc_executor_init(&executor, &support.context, 2, &allocator);
 	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
