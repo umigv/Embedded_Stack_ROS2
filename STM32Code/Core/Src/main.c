@@ -35,6 +35,7 @@
 #include <std_msgs/msg/int32.h>
 #include <std_msgs/msg/float32.h>
 #include <geometry_msgs/msg/twist.h>
+#include <std_msgs/msg/string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,8 +89,8 @@ void StartDefaultTask(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t rx_buff[32];
-char *message;
+uint8_t rx_buff[1];
+char message[1];
 
 
 bool wireless_stop = false;
@@ -139,7 +140,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart2, rx_buff, 32);
+  HAL_UART_Receive_IT(&huart2, rx_buff, 1);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -466,9 +467,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 
   //message = rx_buff[0];
-  HAL_UART_Receive_IT(&huart2, rx_buff, 32); //You need to toggle a breakpoint on this line!
+  HAL_UART_Receive_IT(&huart2, rx_buff, 1); //You need to toggle a breakpoint on this line!
 
-  message = rx_buff;//bytes_to_float(rx_buff);//uint8_t)(rx_buff[0]);
+  message[0] = (char)(50);//rx_buff[0]+20);//bytes_to_float(rx_buff);//uint8_t)(rx_buff[0]);
   //message--;
 }
 
@@ -537,7 +538,8 @@ void StartDefaultTask(void *argument)
 
 	  rcl_publisher_t publisher;
 	  rcl_subscription_t subscriber;
-	  std_msgs__msg__Float32 msg;
+	  std_msgs__msg__String msg;
+	  rosidl_runtime_c__String s;
 	  geometry_msgs__msg__Twist rec;
 	  rclc_support_t support;
 	  rcl_allocator_t allocator;
@@ -555,7 +557,7 @@ void StartDefaultTask(void *argument)
 	  rclc_publisher_init_default(
 	    &publisher,
 	    &node,
-	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
+	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
 	    "/publisher");
 
 	  // create subscriber
@@ -564,11 +566,15 @@ void StartDefaultTask(void *argument)
 	  	    &node,
 	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
 	  	    "/cmd_vel");
+
 	  rclc_executor_t executor;
 	  rclc_executor_init(&executor, &support.context, 2, &allocator);
 	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
 
-	  msg.data = 0;
+	  s.data = message;
+	  s.capacity = 1;
+	  s.size = 1;
+	  msg.data = s;
 
 	  osDelay(3000);
 	  uint8_t calibrate[]="w axis0.requested_state 3\n";
@@ -583,15 +589,17 @@ void StartDefaultTask(void *argument)
 	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
 	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
 	  uint8_t vel1[]="v 1 1\n";
+
 	  //HAL_UART_Transmit_IT(&huart2, vel1, strlen(vel1));
 
 	  // to read: r axis0.vel_estimate
 
 	  for(;;)
 	  {
-		  rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-		  //msg.data = message;
-		  //rcl_ret_t ret = rcl_publish(&publisher, &msg, NULL);
+		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+
+		msg.data = s;
+		rcl_publish(&publisher, &msg, NULL);
 	    /*
 	    if (ret != RCL_RET_OK)
 	    {
@@ -599,14 +607,18 @@ void StartDefaultTask(void *argument)
 	    }
 		*/
 	    //msg.data++;
-		  uint8_t get_vel[]="r axis0.pos_vel_mappe r.vel\n";
-		  HAL_UART_Transmit_IT(&huart2, get_vel, strlen(get_vel));
+		uint8_t get_vel[]="r axis0.pos_vel_mapper.vel\n";
+		HAL_UART_Transmit_IT(&huart2, get_vel, strlen(get_vel));
 	    osDelay(100);
 	    //uint8_t tx_buff[]="arv1\n";//{'a','r','v',message+48,'\n'};
 	    //HAL_UART_Transmit_IT(&huart2, tx_buff, 5);
 
 	  }
-
+	  rclc_executor_fini(&executor);
+	  rcl_publisher_fini(&publisher, &node);
+	  rcl_subscrption_fini(&subscriber, &node);
+	  rcl_node_fini(&node);
+	  rclc_support_fini(&support);
   /* USER CODE END 5 */
 }
 
