@@ -1,0 +1,5 @@
+# Ignore the History Files
+PCB_TestProject/History/*
+
+# Ignore the Preview Files
+PCB_TestProject/__Previews/*
