@@ -41,8 +41,12 @@ The ODrive's configuration can be saved to a JSON file using the command `odrive
 
 ### STM32 Connection to Odrive
 Currently, STM32 is connected via UART to the Odrive. You must connect STM32 ground and 3.3V to the ISO ground and ISO VDD on the Odrive S1.
+
 Left wheel Odrive Rx -> STM pin PC6
+
 Left wheel Odrive TX -> STM pin PC7
 
+
 Right wheel Odrive Rx -> STM pin PA2
+
 Right wheel Odrive TX -> STM pin PA3
