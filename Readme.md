@@ -38,3 +38,15 @@ If there are errors at any point, type `dump_errors(odrv0)` to view all errors, 
 
 The ODrive's configuration can be saved to a JSON file using the command `odrivetool backup-config my_config.json`. It can be saved to an ODrive from the configuration file using `odrivetool restore-config my_config.json` and in `odrivetool`, `odrv0.save_configuration()`. The current configuration is stored under `odrive/config/OdriveS1_current_config`. You must make sure the firmware version for the OdriveS1 is 0.6.7 for the configuration to work. You can update the firmware version by following this [article](https://docs.odriverobotics.com/v/latest/guides/firmware-update.html)
 
+
+### STM32 Connection to Odrive
+Currently, STM32 is connected via UART to the Odrive. You must connect STM32 ground and 3.3V to the ISO ground and ISO VDD on the Odrive S1.
+
+Left wheel Odrive Rx -> STM pin PC6
+
+Left wheel Odrive TX -> STM pin PC7
+
+
+Right wheel Odrive Rx -> STM pin PA2
+
+Right wheel Odrive TX -> STM pin PA3
