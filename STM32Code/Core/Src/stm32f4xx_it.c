@@ -24,6 +24,8 @@
 #include "task.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "WS2812_SPI.h"
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -64,6 +66,7 @@ extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 /* USER CODE BEGIN EV */
+extern bool already_on;
 
 /* USER CODE END EV */
 
@@ -249,7 +252,23 @@ void USART3_IRQHandler(void)
 void TIM6_DAC_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM6_DAC_IRQn 0 */
+	if (already_on){
+		already_on = false;
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 0);
 
+		for(int i = 0; i<30; i++){
+			setLED(i, 255, 0, 0);
+		}
+
+	} else {
+
+		already_on = true;
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 1);
+
+			for(int i = 0; i<30; i++){
+				setLED(i, 0, 0, 255);
+			}
+	}
   /* USER CODE END TIM6_DAC_IRQn 0 */
   HAL_TIM_IRQHandler(&htim6);
   /* USER CODE BEGIN TIM6_DAC_IRQn 1 */
