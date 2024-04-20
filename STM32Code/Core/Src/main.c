@@ -499,6 +499,7 @@ void subscription_callback(const void * msgin){
 	asprintf(&msgOut, "v 0 %i\n", (int)left_vel);
 
 	HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut));
+	HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN); // Toggle the state of LED2
 	//message = rec->data;
 }
 
