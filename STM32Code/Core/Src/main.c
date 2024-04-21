@@ -112,6 +112,7 @@ const float  VEL_LIMIT = RPS_LIMIT / VEL_TO_RPS; // 1.2 mph (~0.57 m/s) limit
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -178,10 +179,12 @@ int main(void)
   osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -439,6 +442,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : estop_button_Pin */
+  GPIO_InitStruct.Pin = estop_button_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(estop_button_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
@@ -499,10 +512,21 @@ void subscription_callback(const void * msgin){
 	asprintf(&msgOut, "v 0 %i\n", (int)left_vel);
 
 	HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut));
-	HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN); // Toggle the state of LED2
 	//message = rec->data;
 }
-
+int volatile prev_val = 0;
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if(GPIO_Pin == estop_button_Pin){
+		if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_8)==GPIO_PIN_SET){
+			HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,RESET);
+			prev_val = 1;
+		}
+		else {
+			HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin,SET);
+			prev_val = 0;
+		}
+	}
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
