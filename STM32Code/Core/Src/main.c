@@ -505,12 +505,11 @@ void subscription_callback(const void * msgin){
 
 	if(HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut)) != HAL_OK){};
 
-	if(linear==0){
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-		//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
-	}else{
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-	}
+	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+
+	free(msgOut);
+	msgOut = NULL;
+
 	HAL_Delay(10);
 
 	//message = rec->data;
@@ -678,6 +677,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+
   }
   /* USER CODE END Error_Handler_Debug */
 }
