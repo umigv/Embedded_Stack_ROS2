@@ -104,6 +104,9 @@ const float PI = 3.14159265359;
 const float VEL_TO_RPS = 1.0 / (WHEEL_DIAMETER * PI) * 98.0/3.0;
 const float RPS_LIMIT = 20;
 const float  VEL_LIMIT = RPS_LIMIT / VEL_TO_RPS; // 1.2 mph (~0.57 m/s) limit
+
+float left_vel;
+float right_vel;
 /* USER CODE END 0 */
 
 /**
@@ -140,7 +143,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart2, rx_buff, 1);
+  //HAL_UART_Receive_IT(&huart2, rx_buff, 1);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -481,8 +484,8 @@ void subscription_callback(const void * msgin){
 	float linear = rec->linear.x;
 	float angular = rec->angular.z;
 
-	float left_vel = LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0);
-	float right_vel = RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0);
+	left_vel = LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0);
+	right_vel = RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0);
 	/*
 	int length = snprintf(NULL, 0, "%s%d", vel, rec->data)+1;
 	char *newBuffer = malloc(length);
@@ -493,12 +496,23 @@ void subscription_callback(const void * msgin){
 
 
 	char *msgOut;
+	// change to float?
+
 	asprintf(&msgOut, "v 0 %i\n", (int)right_vel);
 
-	HAL_UART_Transmit_IT(&huart2, msgOut, strlen(msgOut));
+	if(HAL_UART_Transmit_IT(&huart2, msgOut, strlen(msgOut)) != HAL_OK){};
 	asprintf(&msgOut, "v 0 %i\n", (int)left_vel);
 
-	HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut));
+	if(HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut)) != HAL_OK){};
+
+	if(linear==0){
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+		//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+	}else{
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+	}
+	HAL_Delay(10);
+
 	//message = rec->data;
 }
 
@@ -536,7 +550,7 @@ void StartDefaultTask(void *argument)
 
 	  // micro-ROS app
 
-	  rcl_publisher_t publisher;
+	  //rcl_publisher_t publisher;
 	  rcl_subscription_t subscriber;
 	  std_msgs__msg__String msg;
 	  rosidl_runtime_c__String s;
@@ -552,14 +566,14 @@ void StartDefaultTask(void *argument)
 
 	  // create node
 	  rclc_node_init_default(&node, "cubemx_node", "", &support);
-
+	  /*
 	  // create publisher
 	  rclc_publisher_init_default(
 	    &publisher,
 	    &node,
 	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
 	    "/publisher");
-
+		*/
 	  // create subscriber
 	  rclc_subscription_init_default(
 	  	    &subscriber,
@@ -585,7 +599,7 @@ void StartDefaultTask(void *argument)
 	  HAL_UART_Transmit_IT(&huart2, closed_loop, strlen(closed_loop));
 	  HAL_UART_Transmit_IT(&huart6, closed_loop, strlen(closed_loop));
 	  osDelay(3000);
-	  uint8_t vel0[]="v 0 15\n";
+	  uint8_t vel0[]="v 0 5\n";
 	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
 	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
 	  uint8_t vel1[]="v 1 1\n";
@@ -593,13 +607,23 @@ void StartDefaultTask(void *argument)
 	  //HAL_UART_Transmit_IT(&huart2, vel1, strlen(vel1));
 
 	  // to read: r axis0.vel_estimate
-
+	  rclc_executor_spin(&executor);
 	  for(;;)
 	  {
-		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+		  /*
+		  char *msgOut;
+		  	// change to float?
+		  	asprintf(&msgOut, "v 0 %i\n", (int)right_vel);
 
-		msg.data = s;
-		rcl_publish(&publisher, &msg, NULL);
+		  	HAL_UART_Transmit_IT(&huart2, msgOut, strlen(msgOut));
+		  	asprintf(&msgOut, "v 0 %i\n", (int)left_vel);
+
+		  	HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut));
+
+		  	osDelay(10);
+		  	*/
+		//msg.data = s;
+		//rcl_publish(&publisher, &msg, NULL);
 	    /*
 	    if (ret != RCL_RET_OK)
 	    {
@@ -607,15 +631,15 @@ void StartDefaultTask(void *argument)
 	    }
 		*/
 	    //msg.data++;
-		uint8_t get_vel[]="r axis0.pos_vel_mapper.vel\n";
-		HAL_UART_Transmit_IT(&huart2, get_vel, strlen(get_vel));
-	    osDelay(100);
+		//uint8_t get_vel[]="r axis0.pos_vel_mapper.vel\n";
+		//HAL_UART_Transmit_IT(&huart2, get_vel, strlen(get_vel));
+	    //osDelay(100);
 	    //uint8_t tx_buff[]="arv1\n";//{'a','r','v',message+48,'\n'};
 	    //HAL_UART_Transmit_IT(&huart2, tx_buff, 5);
 
 	  }
 	  rclc_executor_fini(&executor);
-	  rcl_publisher_fini(&publisher, &node);
+	  //rcl_publisher_fini(&publisher, &node);
 	  rcl_subscrption_fini(&subscriber, &node);
 	  rcl_node_fini(&node);
 	  rclc_support_fini(&support);

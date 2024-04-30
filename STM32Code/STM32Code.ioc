@@ -324,3 +324,6 @@ board=NUCLEO-F446ZE
 boardIOC=true
 rtos.0.ip=FREERTOS
 isbadioc=false
+isbadioc=false
+isbadioc=false
+isbadioc=false
