@@ -105,8 +105,7 @@ const float VEL_TO_RPS = 1.0 / (WHEEL_DIAMETER * PI) * 98.0/3.0;
 const float RPS_LIMIT = 20;
 const float  VEL_LIMIT = RPS_LIMIT / VEL_TO_RPS; // 1.2 mph (~0.57 m/s) limit
 
-float left_vel;
-float right_vel;
+
 /* USER CODE END 0 */
 
 /**
@@ -477,6 +476,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 void subscription_callback(const void * msgin){
+	float left_vel;
+	float right_vel;
 	const geometry_msgs__msg__Twist * rec = (const geometry_msgs__msg__Twist *)msgin;
 	uint8_t * vel = "v 0 0\n";
 
@@ -486,6 +487,8 @@ void subscription_callback(const void * msgin){
 
 	left_vel = LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0);
 	right_vel = RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0);
+//	left_vel = (linear - WHEEL_BASE * angular / 2.0);
+//	right_vel = -1 * (linear + WHEEL_BASE * angular / 2.0);
 	/*
 	int length = snprintf(NULL, 0, "%s%d", vel, rec->data)+1;
 	char *newBuffer = malloc(length);
@@ -494,21 +497,43 @@ void subscription_callback(const void * msgin){
 	//uint8_t * vel=//fprintf("v 0 %i\n",rec->data);//"v 0 15\n";
 	//uint8_t * vel = "v 0 0\n";
 
+	// Velocity limit should happen in ros message?
+//	if (left_vel > VEL_LIMIT) {
+//		left_vel = VEL_LIMIT;
+//	}
+//
+//	if (right_vel > VEL_LIMIT) {
+//		right_vel = VEL_LIMIT;
+//	}
 
-	char *msgOut;
+	float left_rpm = left_vel * VEL_TO_RPS;
+	float right_rpm = right_vel * VEL_TO_RPS;
+
+	char *msgOutLeft;
+	char *msgOutRight;
 	// change to float?
 
-	asprintf(&msgOut, "v 0 %i\n", (int)right_vel);
+	asprintf(&msgOutRight, "v 0 %i\n", (int)right_rpm);
+	if(HAL_UART_Transmit_IT(&huart2, msgOutRight, strlen(msgOutRight)) != HAL_OK){};
 
-	if(HAL_UART_Transmit_IT(&huart2, msgOut, strlen(msgOut)) != HAL_OK){};
-	asprintf(&msgOut, "v 0 %i\n", (int)left_vel);
+	asprintf(&msgOutLeft, "v 0 %i\n", (int)left_rpm);
+	if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
 
-	if(HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut)) != HAL_OK){};
+
+//	asprintf(&msgOutRight, "v 0 %i\n", (int)right_vel);
+//	if(HAL_UART_Transmit_IT(&huart2, msgOutRight, strlen(msgOutRight)) != HAL_OK){};
+//
+//	asprintf(&msgOutLeft, "v 0 %i\n", (int)left_vel);
+//	if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
 
 	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
 
-	free(msgOut);
-	msgOut = NULL;
+	free(msgOutRight);
+	free(msgOutLeft);
+
+	msgOutRight = NULL;
+	msgOutLeft = NULL;
+
 
 	HAL_Delay(10);
 
@@ -592,6 +617,7 @@ void StartDefaultTask(void *argument)
 	  osDelay(3000);
 	  uint8_t calibrate[]="w axis0.requested_state 3\n";
 	  HAL_UART_Transmit_IT(&huart2, calibrate, strlen(calibrate));
+	  osDelay(60000);
 	  HAL_UART_Transmit_IT(&huart6, calibrate, strlen(calibrate));
 	  osDelay(60000);
 	  uint8_t closed_loop[]="w axis0.requested_state 8\n";
