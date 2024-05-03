@@ -77,6 +77,9 @@ void Error_Handler(void);
 #define phy_estop_Pin GPIO_PIN_8
 #define phy_estop_GPIO_Port GPIOC
 #define phy_estop_EXTI_IRQn EXTI9_5_IRQn
+#define remote_estop_Pin GPIO_PIN_9
+#define remote_estop_GPIO_Port GPIOC
+#define remote_estop_EXTI_IRQn EXTI9_5_IRQn
 #define USB_SOF_Pin GPIO_PIN_8
 #define USB_SOF_GPIO_Port GPIOA
 #define USB_VBUS_Pin GPIO_PIN_9
