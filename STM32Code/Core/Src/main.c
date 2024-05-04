@@ -26,6 +26,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "FreeRTOS.h"
+#include "task.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <rcl/rcl.h>
@@ -61,13 +64,20 @@
 
 /* USER CODE BEGIN PV */
 
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 3000 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-
+void StartDefaultTask(void *argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -76,10 +86,9 @@ uint8_t rx_buff[1];
 char message[1];
 
 
-bool wireless_stop = false;
 unsigned long lastData = 0;
-const float WHEEL_BASE = 0.62;
-const float WHEEL_DIAMETER = 0.3;
+const float WHEEL_BASE = 0.62;			//verify!!
+const float WHEEL_DIAMETER = 0.312928;
 const long CONTROL_TIMEOUT = 1000;
 const int LEFT_POLARITY = 1;
 const int RIGHT_POLARITY = -1;
@@ -88,9 +97,36 @@ const float VEL_TO_RPS = 1.0 / (WHEEL_DIAMETER * PI) * 98.0/3.0;
 const float RPS_LIMIT = 20;
 const float  VEL_LIMIT = RPS_LIMIT / VEL_TO_RPS; // 1.2 mph (~0.57 m/s) limit
 
+
 int volatile estop_mul = 1;
-int volatile right_encoder_tick = 0;
-int volatile left_encoder_tick = 0;
+int long volatile right_encoder_tick = 0;
+int long volatile left_encoder_tick = 0;
+
+
+float right_prev_time = 0;
+float right_curr_time;
+float right_prev_dist = 0;
+float right_curr_dist = 0;
+float right_vel = 0;
+
+float left_prev_time = 0;
+float left_curr_time;
+float left_prev_dist = 0;
+float left_curr_dist = 0;
+float left_vel = 0;
+
+//constants for the robot
+const float TICK_PER_REV = 720;
+
+
+
+
+rcl_publisher_t publisher;
+geometry_msgs__msg__Twist msg;
+rclc_support_t support;
+rcl_allocator_t allocator;
+rcl_node_t node;
+rclc_executor_t executor;
 
 /* USER CODE END 0 */
 
@@ -210,12 +246,28 @@ void * microros_allocate(size_t size, void * state);
 void microros_deallocate(void * pointer, void * state);
 void * microros_reallocate(void * pointer, size_t size, void * state);
 void * microros_zero_allocate(size_t number_of_elements, size_t size_of_element, void * state);
-/*
-char * chars_to_string(uint8_t buff[]){
-	return "hi";
 
+
+void update_right_dist_time_vel(){
+    right_prev_dist = right_curr_dist;
+    right_curr_dist = right_encoder_tick / TICK_PER_REV * (PI * WHEEL_DIAMETER);
+    right_prev_time = right_curr_time;
+    right_curr_time = HAL_GetTick();
+    right_vel = (right_curr_dist - right_prev_dist) / (right_curr_time - right_prev_time) * 1000;
+ }
+
+void update_left_dist_time_vel(){
+    left_prev_dist = left_curr_dist;
+    left_curr_dist = left_encoder_tick / TICK_PER_REV * (PI * WHEEL_DIAMETER);
+    left_prev_time = left_curr_time;
+    left_curr_time = HAL_GetTick();
+    left_vel = -1 * (left_curr_dist - left_prev_dist) / (left_curr_time - left_prev_time) * 1000;
+ }
+
+
+void MX_FREERTOS_Init(void) {
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 }
-*/
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -290,12 +342,154 @@ void subscription_callback(const void * msgin){
 	msgOutLeft = NULL;
 
 
-	HAL_Delay(10);
-
 	//message = rec->data;
 }
 
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN StartDefaultTask */
+	// micro-ROS configuration
+	  rmw_uros_set_custom_transport(
+	    true,
+	    (void *) &huart3,
+	    cubemx_transport_open,
+	    cubemx_transport_close,
+	    cubemx_transport_write,
+	    cubemx_transport_read);
+
+
+	  rcl_allocator_t freeRTOS_allocator = rcutils_get_zero_initialized_allocator();
+	  freeRTOS_allocator.allocate = microros_allocate;
+	  freeRTOS_allocator.deallocate = microros_deallocate;
+	  freeRTOS_allocator.reallocate = microros_reallocate;
+	  freeRTOS_allocator.zero_allocate =  microros_zero_allocate;
+
+
+	  if (!rcutils_set_default_allocator(&freeRTOS_allocator)) {
+	      printf("Error on default allocators (line %d)\n", __LINE__);
+	  }
+
+
+	  // micro-ROS app
+
+
+	  //rcl_publisher_t publisher;
+	  rcl_subscription_t subscriber;
+	  std_msgs__msg__String msg;
+	  rosidl_runtime_c__String s;
+	  geometry_msgs__msg__Twist rec;
+	  rclc_support_t support;
+	  rcl_allocator_t allocator;
+	  rcl_node_t node;
+
+	  right_curr_time = HAL_GetTick();
+	  left_curr_time = HAL_GetTick();
+
+	  allocator = rcl_get_default_allocator();
+
+
+	  //create init_options
+	  rclc_support_init(&support, 0, NULL, &allocator);
+
+
+	  // create node
+	  rclc_node_init_default(&node, "cubemx_node", "", &support);
+	  /*
+	  // create publisher
+	  rclc_publisher_init_default(
+	    &publisher,
+	    &node,
+	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
+	    "/publisher");
+		*/
+	  // create subscriber
+	  rclc_subscription_init_default(
+	  	    &subscriber,
+	  	    &node,
+	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
+	  	    "/cmd_vel");
+
+
+	  rclc_executor_t executor;
+	  rclc_executor_init(&executor, &support.context, 2, &allocator);
+	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
+
+
+	  s.data = message;
+	  s.capacity = 1;
+	  s.size = 1;
+	  msg.data = s;
+
+
+	  osDelay(3000);
+	  uint8_t calibrate[]="w axis0.requested_state 3\n";
+	  HAL_UART_Transmit_IT(&huart2, calibrate, strlen(calibrate));
+	  osDelay(60000);
+	  HAL_UART_Transmit_IT(&huart6, calibrate, strlen(calibrate));
+	  osDelay(60000);
+	  uint8_t closed_loop[]="w axis0.requested_state 8\n";
+	  HAL_UART_Transmit_IT(&huart2, closed_loop, strlen(closed_loop));
+	  HAL_UART_Transmit_IT(&huart6, closed_loop, strlen(closed_loop));
+	  osDelay(3000);
+	  uint8_t vel0[]="v 0 5\n";
+	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
+	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
+	  uint8_t vel1[]="v 1 1\n";
+
+
+	  //HAL_UART_Transmit_IT(&huart2, vel1, strlen(vel1));
+
+
+	  // to read: r axis0.vel_estimate
+	  rclc_executor_spin(&executor);
+	  for(;;)
+	  {
+		  /*
+		  char *msgOut;
+		  	// change to float?
+		  	asprintf(&msgOut, "v 0 %i\n", (int)right_vel);
+
+
+		  	HAL_UART_Transmit_IT(&huart2, msgOut, strlen(msgOut));
+		  	asprintf(&msgOut, "v 0 %i\n", (int)left_vel);
+
+
+		  	HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut));
+
+
+		  	osDelay(10);
+		  	*/
+		//msg.data = s;
+		//rcl_publish(&publisher, &msg, NULL);
+	    /*
+	    if (ret != RCL_RET_OK)
+	    {
+	      printf("Error publishing (line %d)\n", __LINE__);
+	    }
+		*/
+	    //msg.data++;
+		//uint8_t get_vel[]="r axis0.pos_vel_mapper.vel\n";
+		//HAL_UART_Transmit_IT(&huart2, get_vel, strlen(get_vel));
+	    //osDelay(100);
+	    //uint8_t tx_buff[]="arv1\n";//{'a','r','v',message+48,'\n'};
+	    //HAL_UART_Transmit_IT(&huart2, tx_buff, 5);
+
+
+	  }
+	  rclc_executor_fini(&executor);
+	  //rcl_publisher_fini(&publisher, &node);
+	  rcl_subscrption_fini(&subscriber, &node);
+	  rcl_node_fini(&node);
+	  rclc_support_fini(&support);
+  /* USER CODE END StartDefaultTask */
+}
+
+
 /* USER CODE END 4 */
+
+
+
+
 
 /**
   * @brief  Period elapsed callback in non blocking mode
