@@ -87,7 +87,10 @@ const float PI = 3.14159265359;
 const float VEL_TO_RPS = 1.0 / (WHEEL_DIAMETER * PI) * 98.0/3.0;
 const float RPS_LIMIT = 20;
 const float  VEL_LIMIT = RPS_LIMIT / VEL_TO_RPS; // 1.2 mph (~0.57 m/s) limit
+
 int volatile estop_mul = 1;
+int volatile right_encoder_tick = 0;
+int volatile left_encoder_tick = 0;
 
 /* USER CODE END 0 */
 
