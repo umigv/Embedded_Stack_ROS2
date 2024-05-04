@@ -373,14 +373,17 @@ void StartDefaultTask(void *argument)
 	  // micro-ROS app
 
 
-	  //rcl_publisher_t publisher;
 	  rcl_subscription_t subscriber;
-	  std_msgs__msg__String msg;
 	  rosidl_runtime_c__String s;
 	  geometry_msgs__msg__Twist rec;
 	  rclc_support_t support;
 	  rcl_allocator_t allocator;
 	  rcl_node_t node;
+
+	  /*
+	   * TODO: Initialize ROS Publisher for Twist Msg
+	   * */
+
 
 	  right_curr_time = HAL_GetTick();
 	  left_curr_time = HAL_GetTick();
@@ -444,36 +447,6 @@ void StartDefaultTask(void *argument)
 	  rclc_executor_spin(&executor);
 	  for(;;)
 	  {
-		  /*
-		  char *msgOut;
-		  	// change to float?
-		  	asprintf(&msgOut, "v 0 %i\n", (int)right_vel);
-
-
-		  	HAL_UART_Transmit_IT(&huart2, msgOut, strlen(msgOut));
-		  	asprintf(&msgOut, "v 0 %i\n", (int)left_vel);
-
-
-		  	HAL_UART_Transmit_IT(&huart6, msgOut, strlen(msgOut));
-
-
-		  	osDelay(10);
-		  	*/
-		//msg.data = s;
-		//rcl_publish(&publisher, &msg, NULL);
-	    /*
-	    if (ret != RCL_RET_OK)
-	    {
-	      printf("Error publishing (line %d)\n", __LINE__);
-	    }
-		*/
-	    //msg.data++;
-		//uint8_t get_vel[]="r axis0.pos_vel_mapper.vel\n";
-		//HAL_UART_Transmit_IT(&huart2, get_vel, strlen(get_vel));
-	    //osDelay(100);
-	    //uint8_t tx_buff[]="arv1\n";//{'a','r','v',message+48,'\n'};
-	    //HAL_UART_Transmit_IT(&huart2, tx_buff, 5);
-
 
 	  }
 	  rclc_executor_fini(&executor);
