@@ -465,7 +465,8 @@ void StartDefaultTask(void *argument)
 	  rclc_executor_spin(&executor);
 	  for(;;)
 	  {
-
+		  update_right_dist_time_vel();
+		  update_left_dist_time_vel();
 	  }
 	  rclc_executor_fini(&executor);
 	  rclc_publisher_fini(&enc_vel_publisher, &node);
