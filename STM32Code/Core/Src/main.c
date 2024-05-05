@@ -118,15 +118,11 @@ float left_vel = 0;
 //constants for the robot
 const float TICK_PER_REV = 720;
 
+//ROS encoder publisher
+rcl_publisher_t enc_vel_publisher;
+geometry_msgs__msg__Twist outgoing_twist;
 
 
-
-rcl_publisher_t publisher;
-geometry_msgs__msg__Twist msg;
-rclc_support_t support;
-rcl_allocator_t allocator;
-rcl_node_t node;
-rclc_executor_t executor;
 
 /* USER CODE END 0 */
 
@@ -345,6 +341,16 @@ void subscription_callback(const void * msgin){
 	//message = rec->data;
 }
 
+void pub_callback(rcl_timer_t * timer, int64_t last_call_time)
+{
+    RCLC_UNUSED(last_call_time);
+    if (timer != NULL) {
+    	outgoing_twist.linear.x = (left_vel + right_vel) / 2.0;;
+    	outgoing_twist.angular.z = (right_vel - left_vel) / WHEEL_BASE;
+        rcl_publish(&enc_vel_publisher, &outgoing_twist, NULL);
+    }
+}
+
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
@@ -372,10 +378,15 @@ void StartDefaultTask(void *argument)
 
 	  // micro-ROS app
 
-
 	  rcl_subscription_t subscriber;
+
+
 	  rosidl_runtime_c__String s;
+
 	  geometry_msgs__msg__Twist rec;
+	  std_msgs__msg__String msg;
+
+
 	  rclc_support_t support;
 	  rcl_allocator_t allocator;
 	  rcl_node_t node;
@@ -397,14 +408,14 @@ void StartDefaultTask(void *argument)
 
 	  // create node
 	  rclc_node_init_default(&node, "cubemx_node", "", &support);
-	  /*
-	  // create publisher
+
+	  // Initialize a publisher on the "enc_vel" topic with Twist message type
 	  rclc_publisher_init_default(
-	    &publisher,
-	    &node,
-	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
-	    "/publisher");
-		*/
+		  &enc_vel_publisher,
+		  &node,
+		  ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
+		  "/enc_vel");
+
 	  // create subscriber
 	  rclc_subscription_init_default(
 	  	    &subscriber,
@@ -413,8 +424,16 @@ void StartDefaultTask(void *argument)
 	  	    "/cmd_vel");
 
 
+	  rcl_timer_t timer;
+	  const unsigned int timer_timeout = 50; //ms between publish
+	  rclc_timer_init_default(
+		  &timer,
+		  &support,
+		  RCL_MS_TO_NS(timer_timeout),
+		  pub_callback);
+
 	  rclc_executor_t executor;
-	  rclc_executor_init(&executor, &support.context, 2, &allocator);
+	  rclc_executor_init(&executor, &support.context, 2, &allocator); //gpt says it should be 1 for the 3rd param
 	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
 
 
@@ -437,7 +456,6 @@ void StartDefaultTask(void *argument)
 	  uint8_t vel0[]="v 0 5\n";
 	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
 	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
-	  uint8_t vel1[]="v 1 1\n";
 
 
 	  //HAL_UART_Transmit_IT(&huart2, vel1, strlen(vel1));
@@ -450,7 +468,7 @@ void StartDefaultTask(void *argument)
 
 	  }
 	  rclc_executor_fini(&executor);
-	  //rcl_publisher_fini(&publisher, &node);
+	  rclc_publisher_fini(&enc_vel_publisher, &node);
 	  rcl_subscrption_fini(&subscriber, &node);
 	  rcl_node_fini(&node);
 	  rclc_support_fini(&support);
