@@ -275,21 +275,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   //message--;
 }
 
-void publish_callback(rcl_timer_t * timer, int64_t last_call_time)
-{
-    (void) last_call_time; // Not used in this case
-    (void) timer; // Not used directly but required by the function signature
-
-    // Compute wheel velocities
-    update_right_dist_time_vel();
-    update_left_dist_time_vel();
-
-    // Compute and publish the Twist message
-    enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
-    enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
-
-    rclc_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
-}
 
 void subscription_callback(const void * msgin){
 	float left_vel;
@@ -349,6 +334,15 @@ void subscription_callback(const void * msgin){
 	msgOutRight = NULL;
 	msgOutLeft = NULL;
 
+    update_right_dist_time_vel();
+    update_left_dist_time_vel();
+
+    // Compute and publish the Twist message
+    enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
+    enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
+
+    rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
+
 
 	//message = rec->data;
 }
@@ -394,15 +388,20 @@ void StartDefaultTask(void *argument)
 	  rcl_allocator_t allocator;
 	  rcl_node_t node;
 
-	  /*
-	   * TODO: Initialize ROS Publisher for Twist Msg
-	   * */
-
 
 	  right_curr_time = HAL_GetTick();
 	  left_curr_time = HAL_GetTick();
 
 	  allocator = rcl_get_default_allocator();
+
+	  // create publisher timer
+//	  rcl_timer_t timer;
+//	  const unsigned int spin_period = RCL_MS_TO_NS(20); //20 ms
+//	  rcl_ret_t rc = rclc_timer_init_default(&timer, &support, spin_period, publish_callback);
+
+
+
+
 
 
 	  //create init_options
@@ -420,8 +419,11 @@ void StartDefaultTask(void *argument)
 	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
 	  	    "/cmd_vel");
 
-	  // create publisher
-	  rclc_publisher_init_best_effort(
+
+
+
+	  //create publisher
+	  rclc_publisher_init_default(
 	    &enc_vel_publisher,
 	    &node,
 	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
@@ -433,9 +435,7 @@ void StartDefaultTask(void *argument)
 	  rclc_executor_t executor;
 	  rclc_executor_init(&executor, &support.context, 2, &allocator); //gpt says it should be 1 for the 3rd param
 	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
-	  rclc_executor_add_publisher(&executor, &enc_vel_publisher, &enc_vel_msg, &publish_callback, ON_NEW_DATA);
-	  const unsigned int spin_period = 50;
-
+//	  rclc_executor_add_timer(&executor, &timer);
 
 
 	  s.data = message;
@@ -473,7 +473,7 @@ void StartDefaultTask(void *argument)
 		  if(right_encoder_tick == -2){
 			  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin,0);
 		  }
-		  rclc_executor_spin_period(&executor, RCL_MS_TO_NS(spin_period));
+
 	  }
 	  rclc_executor_fini(&executor);
 	  rclc_publisher_fini(&enc_vel_publisher, &node);
@@ -481,6 +481,8 @@ void StartDefaultTask(void *argument)
 	  rcl_node_fini(&node);
 	  rclc_support_fini(&support);
 	  rclc_publisher_fini(&enc_vel_publisher, &node);
+//	  rcl_timer_fini(&timer);
+
   /* USER CODE END StartDefaultTask */
 }
 
