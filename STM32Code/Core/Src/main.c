@@ -336,10 +336,9 @@ void subscription_callback(const void * msgin){
 	msgOutRight = NULL;
 	msgOutLeft = NULL;
 
-
-
-
-
+	enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
+	enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
+	rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
 
 	//message = rec->data;
 }
@@ -416,17 +415,12 @@ void StartDefaultTask(void *argument)
 	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
 	  	    "/cmd_vel");
 
-
-
-
 	  //create publisher
 	  rclc_publisher_init_default(
 	    &enc_vel_publisher,
 	    &node,
 	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
 	    "/enc_vel");
-
-
 
 
 	  rclc_executor_t executor;
@@ -440,11 +434,11 @@ void StartDefaultTask(void *argument)
 	  s.size = 1;
 	  msg.data = s;
 
-/*
+
 	  osDelay(3000);
 	  uint8_t calibrate[]="w axis0.requested_state 3\n";
 	  HAL_UART_Transmit_IT(&huart2, calibrate, strlen(calibrate));
-	  osDelay(60000);
+//	  osDelay(60000);
 	  HAL_UART_Transmit_IT(&huart6, calibrate, strlen(calibrate));
 	  osDelay(60000);
 	  uint8_t closed_loop[]="w axis0.requested_state 8\n";
@@ -454,7 +448,7 @@ void StartDefaultTask(void *argument)
 	  uint8_t vel0[]="v 0 5\n";
 	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
 	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
-*/
+
 
 
 
@@ -464,8 +458,6 @@ void StartDefaultTask(void *argument)
 	  rclc_executor_spin(&executor);
 	  for(;;)
 	  {
-		  update_right_dist_time_vel();
-		  update_left_dist_time_vel();
 		  if(right_encoder_tick == 0){
 			  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin,1);
 		  }
@@ -474,13 +466,7 @@ void StartDefaultTask(void *argument)
 		  }
 		  update_right_dist_time_vel();
 		  update_left_dist_time_vel();
-		  if(HAL_GetTick() - prev_pub_time >= 20){
-			  // Compute and publish the Twist message
-			  enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
-			  enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
-			  rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
-			  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		  }
+
 
 	  }
 	  rclc_executor_fini(&executor);
