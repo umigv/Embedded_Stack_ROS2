@@ -117,12 +117,8 @@ float left_vel = 0;
 
 //constants for the robot
 const float TICK_PER_REV = 720;
-
-//ROS encoder publisher
 rcl_publisher_t enc_vel_publisher;
-geometry_msgs__msg__Twist outgoing_twist;
-
-
+geometry_msgs__msg__Twist enc_vel_msg;
 
 /* USER CODE END 0 */
 
@@ -264,6 +260,7 @@ void update_left_dist_time_vel(){
 void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 }
+//			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin,1);
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -278,6 +275,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   //message--;
 }
 
+void publish_callback(rcl_timer_t * timer, int64_t last_call_time)
+{
+    (void) last_call_time; // Not used in this case
+    (void) timer; // Not used directly but required by the function signature
+
+    // Compute wheel velocities
+    update_right_dist_time_vel();
+    update_left_dist_time_vel();
+
+    // Compute and publish the Twist message
+    enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
+    enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
+
+    rclc_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
+}
+
 void subscription_callback(const void * msgin){
 	float left_vel;
 	float right_vel;
@@ -290,8 +303,7 @@ void subscription_callback(const void * msgin){
 
 	left_vel = estop_mul * LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0);
 	right_vel = estop_mul * RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0);
-//	left_vel = (linear - WHEEL_BASE * angular / 2.0);
-//	right_vel = -1 * (linear + WHEEL_BASE * angular / 2.0);
+
 	/*
 	int length = snprintf(NULL, 0, "%s%d", vel, rec->data)+1;
 	char *newBuffer = malloc(length);
@@ -341,15 +353,6 @@ void subscription_callback(const void * msgin){
 	//message = rec->data;
 }
 
-void pub_callback(rcl_timer_t * timer, int64_t last_call_time)
-{
-    RCLC_UNUSED(last_call_time);
-    if (timer != NULL) {
-    	outgoing_twist.linear.x = (left_vel + right_vel) / 2.0;;
-    	outgoing_twist.angular.z = (right_vel - left_vel) / WHEEL_BASE;
-        rcl_publish(&enc_vel_publisher, &outgoing_twist, NULL);
-    }
-}
 
 void StartDefaultTask(void *argument)
 {
@@ -409,12 +412,6 @@ void StartDefaultTask(void *argument)
 	  // create node
 	  rclc_node_init_default(&node, "cubemx_node", "", &support);
 
-	  // Initialize a publisher on the "enc_vel" topic with Twist message type
-	  rclc_publisher_init_default(
-		  &enc_vel_publisher,
-		  &node,
-		  ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-		  "/enc_vel");
 
 	  // create subscriber
 	  rclc_subscription_init_default(
@@ -423,18 +420,22 @@ void StartDefaultTask(void *argument)
 	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
 	  	    "/cmd_vel");
 
+	  // create publisher
+	  rclc_publisher_init_best_effort(
+	    &enc_vel_publisher,
+	    &node,
+	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
+	    "/enc_vel");
 
-	  rcl_timer_t timer;
-	  const unsigned int timer_timeout = 50; //ms between publish
-	  rclc_timer_init_default(
-		  &timer,
-		  &support,
-		  RCL_MS_TO_NS(timer_timeout),
-		  pub_callback);
+
+
 
 	  rclc_executor_t executor;
 	  rclc_executor_init(&executor, &support.context, 2, &allocator); //gpt says it should be 1 for the 3rd param
 	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
+	  rclc_executor_add_publisher(&executor, &enc_vel_publisher, &enc_vel_msg, &publish_callback, ON_NEW_DATA);
+	  const unsigned int spin_period = 50;
+
 
 
 	  s.data = message;
@@ -442,7 +443,7 @@ void StartDefaultTask(void *argument)
 	  s.size = 1;
 	  msg.data = s;
 
-
+/*
 	  osDelay(3000);
 	  uint8_t calibrate[]="w axis0.requested_state 3\n";
 	  HAL_UART_Transmit_IT(&huart2, calibrate, strlen(calibrate));
@@ -456,9 +457,8 @@ void StartDefaultTask(void *argument)
 	  uint8_t vel0[]="v 0 5\n";
 	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
 	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
+*/
 
-
-	  //HAL_UART_Transmit_IT(&huart2, vel1, strlen(vel1));
 
 
 	  // to read: r axis0.vel_estimate
@@ -467,12 +467,20 @@ void StartDefaultTask(void *argument)
 	  {
 		  update_right_dist_time_vel();
 		  update_left_dist_time_vel();
+		  if(right_encoder_tick == 0){
+			  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin,1);
+		  }
+		  if(right_encoder_tick == -2){
+			  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin,0);
+		  }
+		  rclc_executor_spin_period(&executor, RCL_MS_TO_NS(spin_period));
 	  }
 	  rclc_executor_fini(&executor);
 	  rclc_publisher_fini(&enc_vel_publisher, &node);
 	  rcl_subscrption_fini(&subscriber, &node);
 	  rcl_node_fini(&node);
 	  rclc_support_fini(&support);
+	  rclc_publisher_fini(&enc_vel_publisher, &node);
   /* USER CODE END StartDefaultTask */
 }
 
