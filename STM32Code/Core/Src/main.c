@@ -459,6 +459,8 @@ void StartDefaultTask(void *argument)
 
 
 	  // to read: r axis0.vel_estimate
+
+	  float prev_pub_time = 0;
 	  rclc_executor_spin(&executor);
 	  for(;;)
 	  {
@@ -472,6 +474,13 @@ void StartDefaultTask(void *argument)
 		  }
 		  update_right_dist_time_vel();
 		  update_left_dist_time_vel();
+		  if(HAL_GetTick() - prev_pub_time >= 20){
+			  // Compute and publish the Twist message
+			  enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
+			  enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
+			  rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
+			  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+		  }
 
 	  }
 	  rclc_executor_fini(&executor);
@@ -480,6 +489,7 @@ void StartDefaultTask(void *argument)
 	  rcl_node_fini(&node);
 	  rclc_support_fini(&support);
 	  rclc_publisher_fini(&enc_vel_publisher, &node);
+
 //	  rcl_timer_fini(&timer);
 
   /* USER CODE END StartDefaultTask */
@@ -510,10 +520,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   if(htim == &htim6){
 	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-	  // Compute and publish the Twist message
-	  enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
-	  enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
-	  rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
+
 
 
   }
