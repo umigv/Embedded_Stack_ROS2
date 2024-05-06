@@ -55,28 +55,3 @@
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
-
-void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
-
-/**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
-
-
-/* USER CODE BEGIN Header_StartDefaultTask */
-/**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartDefaultTask */
-
-
-/* Private application code --------------------------------------------------*/
-/* USER CODE BEGIN Application */
-
-/* USER CODE END Application */
-

@@ -20,6 +20,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "dma.h"
+#include "tim.h"
 #include "usart.h"
 #include "usb_otg.h"
 #include "gpio.h"
@@ -156,8 +157,9 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-  //HAL_UART_Receive_IT(&huart2, rx_buff, 1);
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -334,14 +336,9 @@ void subscription_callback(const void * msgin){
 	msgOutRight = NULL;
 	msgOutLeft = NULL;
 
-    update_right_dist_time_vel();
-    update_left_dist_time_vel();
 
-    // Compute and publish the Twist message
-    enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
-    enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
 
-    rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
+
 
 
 	//message = rec->data;
@@ -473,6 +470,8 @@ void StartDefaultTask(void *argument)
 		  if(right_encoder_tick == -2){
 			  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin,0);
 		  }
+		  update_right_dist_time_vel();
+		  update_left_dist_time_vel();
 
 	  }
 	  rclc_executor_fini(&executor);
@@ -488,10 +487,6 @@ void StartDefaultTask(void *argument)
 
 
 /* USER CODE END 4 */
-
-
-
-
 
 /**
   * @brief  Period elapsed callback in non blocking mode
@@ -510,6 +505,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
+
+  //ROS Publisher periodic callback
+  if(htim == &htim6){
+	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+
+	  // Compute and publish the Twist message
+	  enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
+	  enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
+	  rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
+
+
+  }
 
   /* USER CODE END Callback 1 */
 }
