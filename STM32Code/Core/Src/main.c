@@ -372,22 +372,12 @@ void StartDefaultTask(void *argument)
 	  // micro-ROS app
 
 	  rcl_subscription_t subscriber;
-
-
 	  rosidl_runtime_c__String s;
-
 	  geometry_msgs__msg__Twist rec;
 	  std_msgs__msg__String msg;
-
-
 	  rclc_support_t support;
 	  rcl_allocator_t allocator;
 	  rcl_node_t node;
-
-
-	  right_curr_time = HAL_GetTick();
-	  left_curr_time = HAL_GetTick();
-
 	  allocator = rcl_get_default_allocator();
 
 	  // create publisher timer
@@ -395,18 +385,11 @@ void StartDefaultTask(void *argument)
 //	  const unsigned int spin_period = RCL_MS_TO_NS(20); //20 ms
 //	  rcl_ret_t rc = rclc_timer_init_default(&timer, &support, spin_period, publish_callback);
 
-
-
-
-
-
 	  //create init_options
 	  rclc_support_init(&support, 0, NULL, &allocator);
 
-
 	  // create node
 	  rclc_node_init_default(&node, "cubemx_node", "", &support);
-
 
 	  // create subscriber
 	  rclc_subscription_init_default(
@@ -424,7 +407,7 @@ void StartDefaultTask(void *argument)
 
 
 	  rclc_executor_t executor;
-	  rclc_executor_init(&executor, &support.context, 2, &allocator); //gpt says it should be 1 for the 3rd param
+	  rclc_executor_init(&executor, &support.context, 2, &allocator);
 	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
 //	  rclc_executor_add_timer(&executor, &timer);
 
@@ -450,12 +433,11 @@ void StartDefaultTask(void *argument)
 	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
 
 
-
-
-	  // to read: r axis0.vel_estimate
-
 	  float prev_pub_time = 0;
+	  right_curr_time = HAL_GetTick();
+	  left_curr_time = HAL_GetTick();
 	  rclc_executor_spin(&executor);
+
 	  for(;;)
 	  {
 		  if(right_encoder_tick == 0){
@@ -505,10 +487,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //ROS Publisher periodic callback
   if(htim == &htim6){
 	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-
-
-
-
   }
 
   /* USER CODE END Callback 1 */
