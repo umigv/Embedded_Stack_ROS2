@@ -279,9 +279,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void publish_callback(rcl_timer_t * timer, int64_t last_call_time)
 {
-  rcl_ret_t rc;
-  RCLC_UNUSED(last_call_time);
-  if (timer != NULL) {
+	update_right_dist_time_vel();
+	update_left_dist_time_vel();
+	rcl_ret_t rc;
+	RCLC_UNUSED(last_call_time);
+	if (timer != NULL) {
 	  enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
 	  enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
 	  rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
@@ -316,7 +318,6 @@ void subscription_callback(const void * msgin){
 	asprintf(&msgOutLeft, "v 0 %i\n", (int)left_vel_rpm);
 	if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
 
-	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
 
 	free(msgOutRight);
 	free(msgOutLeft);
@@ -371,9 +372,9 @@ void StartDefaultTask(void *argument)
 	  rclc_support_init(&support, 0, NULL, &allocator);
 
 	  // create publisher timer
-//	  rcl_timer_t timer;
-//	  const unsigned int spin_period = RCL_MS_TO_NS(20); //20 ms
-//	  rcl_ret_t rc = rclc_timer_init_default(&timer, &support, spin_period, publish_callback);
+	  rcl_timer_t timer;
+	  const unsigned int spin_period = RCL_MS_TO_NS(20); //20 ms
+	  rcl_ret_t rc = rclc_timer_init_default(&timer, &support, spin_period, publish_callback);
 
 	  // create node
 	  rclc_node_init_default(&node, "cubemx_node", "", &support);
@@ -396,7 +397,7 @@ void StartDefaultTask(void *argument)
 	  rclc_executor_t executor;
 	  rclc_executor_init(&executor, &support.context, 2, &allocator);
 	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
-//	  rclc_executor_add_timer(&executor, &timer);
+	  rclc_executor_add_timer(&executor, &timer);
 
 
 	  s.data = message;
@@ -405,30 +406,34 @@ void StartDefaultTask(void *argument)
 	  msg.data = s;
 
 
-//	  osDelay(3000);
-//	  uint8_t calibrate[]="w axis0.requested_state 3\n";
-//	  HAL_UART_Transmit_IT(&huart2, calibrate, strlen(calibrate));
-////	  osDelay(60000);
-//	  HAL_UART_Transmit_IT(&huart6, calibrate, strlen(calibrate));
+	  osDelay(3000);
+	  uint8_t calibrate[]="w axis0.requested_state 3\n";
+	  HAL_UART_Transmit_IT(&huart2, calibrate, strlen(calibrate));
 //	  osDelay(60000);
-//	  uint8_t closed_loop[]="w axis0.requested_state 8\n";
-//	  HAL_UART_Transmit_IT(&huart2, closed_loop, strlen(closed_loop));
-//	  HAL_UART_Transmit_IT(&huart6, closed_loop, strlen(closed_loop));
-//	  osDelay(3000);
-//	  uint8_t vel0[]="v 0 5\n";
-//	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
-//	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
-//
-//
+	  HAL_UART_Transmit_IT(&huart6, calibrate, strlen(calibrate));
+	  osDelay(60000);
+	  uint8_t closed_loop[]="w axis0.requested_state 8\n";
+	  HAL_UART_Transmit_IT(&huart2, closed_loop, strlen(closed_loop));
+	  HAL_UART_Transmit_IT(&huart6, closed_loop, strlen(closed_loop));
+	  osDelay(3000);
+	  uint8_t vel0[]="v 0 5\n";
+	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
+	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
+
+
 	  float prev_pub_time = 0;
 //	  right_curr_time = HAL_GetTick();
 //	  left_curr_time = HAL_GetTick();
 	  rclc_executor_spin(&executor);
+	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
+	  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, 1);
 
 	  for(;;)
 	  {
+		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0);
+
 		  if (HAL_GetTick() - prev_pub_time >= 1000 ){
-			  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+//			  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 			  prev_pub_time = HAL_GetTick();
 		  }
 
@@ -441,7 +446,7 @@ void StartDefaultTask(void *argument)
 	  rclc_support_fini(&support);
 	  rclc_publisher_fini(&enc_vel_publisher, &node);
 
-//	  rcl_timer_fini(&timer);
+      rcl_timer_fini(&timer);
 
   /* USER CODE END StartDefaultTask */
 }
