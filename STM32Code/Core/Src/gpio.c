@@ -125,7 +125,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}
 
 	//Encoders
-
 	if(GPIO_Pin == enc_right_green_Pin){
 		if((HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == SET)&&(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_14) == RESET)){
 			right_encoder_tick ++;
@@ -162,7 +161,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 			left_encoder_tick ++;
 		}
 		else{
-			HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, RESET);
 			left_encoder_tick --;
 		}
 		if ((HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_12) == RESET)&&(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_10) == SET)){

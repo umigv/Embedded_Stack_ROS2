@@ -279,8 +279,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 
 void subscription_callback(const void * msgin){
-	float left_vel;
-	float right_vel;
+	float left_vel_rpm;
+	float right_vel_rpm;
 	const geometry_msgs__msg__Twist * rec = (const geometry_msgs__msg__Twist *)msgin;
 	uint8_t * vel = "v 0 0\n";
 
@@ -288,45 +288,17 @@ void subscription_callback(const void * msgin){
 	float linear = rec->linear.x;
 	float angular = rec->angular.z;
 
-	left_vel = estop_mul * LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0);
-	right_vel = estop_mul * RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0);
-
-	/*
-	int length = snprintf(NULL, 0, "%s%d", vel, rec->data)+1;
-	char *newBuffer = malloc(length);
-	snprintf(newBuffer, length, )
-	*/
-	//uint8_t * vel=//fprintf("v 0 %i\n",rec->data);//"v 0 15\n";
-	//uint8_t * vel = "v 0 0\n";
-
-	// Velocity limit should happen in ros message?
-//	if (left_vel > VEL_LIMIT) {
-//		left_vel = VEL_LIMIT;
-//	}
-//
-//	if (right_vel > VEL_LIMIT) {
-//		right_vel = VEL_LIMIT;
-//	}
-
-	float left_rpm = left_vel * VEL_TO_RPS;
-	float right_rpm = right_vel * VEL_TO_RPS;
+	left_vel_rpm = estop_mul * LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0)* VEL_TO_RPS;
+	right_vel_rpm = estop_mul * RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0)* VEL_TO_RPS;
 
 	char *msgOutLeft;
 	char *msgOutRight;
-	// change to float?
 
-	asprintf(&msgOutRight, "v 0 %i\n", (int)right_rpm);
+	asprintf(&msgOutRight, "v 0 %i\n", (int)right_vel_rpm);
 	if(HAL_UART_Transmit_IT(&huart2, msgOutRight, strlen(msgOutRight)) != HAL_OK){};
 
-	asprintf(&msgOutLeft, "v 0 %i\n", (int)left_rpm);
+	asprintf(&msgOutLeft, "v 0 %i\n", (int)left_vel_rpm);
 	if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
-
-
-//	asprintf(&msgOutRight, "v 0 %i\n", (int)right_vel);
-//	if(HAL_UART_Transmit_IT(&huart2, msgOutRight, strlen(msgOutRight)) != HAL_OK){};
-//
-//	asprintf(&msgOutLeft, "v 0 %i\n", (int)left_vel);
-//	if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
 
 	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
 
@@ -340,7 +312,6 @@ void subscription_callback(const void * msgin){
 	enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
 	rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
 
-	//message = rec->data;
 }
 
 
