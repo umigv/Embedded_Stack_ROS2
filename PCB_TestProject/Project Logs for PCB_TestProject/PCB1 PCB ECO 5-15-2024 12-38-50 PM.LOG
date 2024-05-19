@@ -1,0 +1,10 @@
+Change Component Footprint: Designator=GPIO_1 Old Footprint=610110249121 New Footprint=610110249121
+Change Component Designator: OldDesignator=J? NewDesignator=J_JTAG
+Change Net Name : Old Net Name=NetJ?_3 New Net Name=NetJ_JTAG_3
+Change Net Name : Old Net Name=NetJ?_5 New Net Name=NetJ_JTAG_5
+Change Net Name : Old Net Name=NetJ?_7 New Net Name=NetJ_JTAG_7
+Change Net Name : Old Net Name=NetJ?_9 New Net Name=NetJ_JTAG_9
+Change Net Name : Old Net Name=NetJ?_11 New Net Name=NetJ_JTAG_11
+Change Net Name : Old Net Name=NetJ?_13 New Net Name=NetJ_JTAG_13
+Change Net Name : Old Net Name=NetJ?_17 New Net Name=NetJ_JTAG_17
+Change Net Name : Old Net Name=NetJ?_19 New Net Name=NetJ_JTAG_19
