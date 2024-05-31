@@ -49,6 +49,7 @@
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 
+
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 

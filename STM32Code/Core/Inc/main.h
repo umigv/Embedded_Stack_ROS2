@@ -67,6 +67,8 @@ void Error_Handler(void);
 #define enc_left_green_Pin GPIO_PIN_10
 #define enc_left_green_GPIO_Port GPIOE
 #define enc_left_green_EXTI_IRQn EXTI15_10_IRQn
+#define Indicator_LED_Pin GPIO_PIN_11
+#define Indicator_LED_GPIO_Port GPIOE
 #define enc_left_white_Pin GPIO_PIN_12
 #define enc_left_white_GPIO_Port GPIOE
 #define enc_left_white_EXTI_IRQn EXTI15_10_IRQn
@@ -106,8 +108,6 @@ void Error_Handler(void);
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
-#define indicator_LED_Pin GPIO_PIN_11
-#define indicator_LED_GPIO_Port GPIOC
 #define LD2_Pin GPIO_PIN_7
 #define LD2_GPIO_Port GPIOB
 

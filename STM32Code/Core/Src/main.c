@@ -248,7 +248,6 @@ void update_right_dist_time_vel(){
     right_prev_time = right_curr_time;
     right_curr_time = HAL_GetTick();
     right_vel = (right_curr_dist - right_prev_dist) / (right_curr_time - right_prev_time) * 1000;
-    right_vel = right_vel * 2 * PI * WHEEL_DIAMETER * 10;
  }
 
 void update_left_dist_time_vel(){
@@ -257,7 +256,6 @@ void update_left_dist_time_vel(){
     left_prev_time = left_curr_time;
     left_curr_time = HAL_GetTick();
     left_vel = -1 * (left_curr_dist - left_prev_dist) / (left_curr_time - left_prev_time) * 1000;
-    left_vel = left_vel * 2 * PI * WHEEL_DIAMETER * 10;
  }
 
 
@@ -477,7 +475,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //ROS Publisher periodic callback
   if(htim == &htim6){
 	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_11);
+	  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_11);
 
   }
 
