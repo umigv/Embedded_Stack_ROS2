@@ -98,10 +98,11 @@ const float VEL_TO_RPS = 1.0 / (WHEEL_DIAMETER * PI) * 98.0/3.0;
 const float RPS_LIMIT = 20;
 const float  VEL_LIMIT = RPS_LIMIT / VEL_TO_RPS; // 1.2 mph (~0.57 m/s) limit
 
-
+int volatile is_auto = 0;
 int volatile estop_mul = 1;
 int long volatile right_encoder_tick = 0;
 int long volatile left_encoder_tick = 0;
+int volatile led_counter = 0;
 
 
 float right_prev_time = 0;
@@ -297,38 +298,65 @@ void publish_callback(rcl_timer_t * timer, int64_t last_call_time)
 }
 
 void subscription_callback(const void * msgin){
+
 	float left_vel_rpm;
 	float right_vel_rpm;
 	const geometry_msgs__msg__Twist * rec = (const geometry_msgs__msg__Twist *)msgin;
-	uint8_t * vel = "v 0 0\n";
+
+//	if (rec != NULL){
+
+		uint8_t * vel = "v 0 0\n";
+
+		float linear = rec->linear.x;
+		float angular = rec->angular.z;
+
+		left_vel_rpm = estop_mul * LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0)* VEL_TO_RPS;
+		right_vel_rpm = estop_mul * RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0)* VEL_TO_RPS;
+
+		char *msgOutLeft;
+		char *msgOutRight;
+
+		asprintf(&msgOutRight, "v 0 %i\n", (int)right_vel_rpm);
+		if(HAL_UART_Transmit_IT(&huart2, msgOutRight, strlen(msgOutRight)) != HAL_OK){};
+
+		asprintf(&msgOutLeft, "v 0 %i\n", (int)left_vel_rpm);
+		if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
 
 
-	float linear = rec->linear.x;
-	float angular = rec->angular.z;
+		free(msgOutRight);
+		free(msgOutLeft);
 
-	left_vel_rpm = estop_mul * LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0)* VEL_TO_RPS;
-	right_vel_rpm = estop_mul * RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0)* VEL_TO_RPS;
+		msgOutRight = NULL;
+		msgOutLeft = NULL;
 
-	char *msgOutLeft;
-	char *msgOutRight;
+//	}
 
-	asprintf(&msgOutRight, "v 0 %i\n", (int)right_vel_rpm);
-	if(HAL_UART_Transmit_IT(&huart2, msgOutRight, strlen(msgOutRight)) != HAL_OK){};
+//	else{
+//
+//
+//		char *msgOutLeft;
+//		char *msgOutRight;
+//
+//		asprintf(&msgOutRight, "v 0 %i\n", (int)right_vel_rpm);
+//		if(HAL_UART_Transmit_IT(&huart2, msgOutRight, strlen(msgOutRight)) != HAL_OK){};
+//
+//		asprintf(&msgOutLeft, "v 0 %i\n", (int)left_vel_rpm);
+//		if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
+//
+//
+//		free(msgOutRight);
+//		free(msgOutLeft);
+//
+//		msgOutRight = NULL;
+//		msgOutLeft = NULL;
+//
+//	}
 
-	asprintf(&msgOutLeft, "v 0 %i\n", (int)left_vel_rpm);
-	if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
+}
 
-
-	free(msgOutRight);
-	free(msgOutLeft);
-
-	msgOutRight = NULL;
-	msgOutLeft = NULL;
-
-//	enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
-//	enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
-//	rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
-
+void LED_subscription_callback (const void * msgin){
+	const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *) msgin;
+	is_auto = msg-> data;
 }
 
 
@@ -360,8 +388,11 @@ void StartDefaultTask(void *argument)
 	  // micro-ROS app
 
 	  rcl_subscription_t subscriber;
+	  rcl_subscription_t LED_subscriber;
+
 	  rosidl_runtime_c__String s;
 	  geometry_msgs__msg__Twist rec;
+	  std_msgs__msg__Int32 LED;
 	  std_msgs__msg__String msg;
 	  rclc_support_t support;
 	  rcl_allocator_t allocator;
@@ -376,7 +407,7 @@ void StartDefaultTask(void *argument)
 	  const unsigned int spin_period = RCL_MS_TO_NS(20); //20 ms
 	  rcl_ret_t rc = rclc_timer_init_default(&timer, &support, spin_period, publish_callback);
 
-	  // create node
+	  // create node/driving_state
 	  rclc_node_init_default(&node, "cubemx_node", "", &support);
 
 	  // create subscriber
@@ -384,7 +415,13 @@ void StartDefaultTask(void *argument)
 	  	    &subscriber,
 	  	    &node,
 	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-	  	    "/cmd_vel");
+	  	    "merge_vel");
+
+	  rclc_subscription_init_default(
+	 	  	    &LED_subscriber,
+	 	  	    &node,
+	 	  	    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+	 	  	    "/driving_state");
 
 	  //create publisher
 	  rclc_publisher_init_default(
@@ -395,8 +432,10 @@ void StartDefaultTask(void *argument)
 
 
 	  rclc_executor_t executor;
-	  rclc_executor_init(&executor, &support.context, 2, &allocator);
+	  rclc_executor_init(&executor, &support.context, 3, &allocator);
 	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
+	  rclc_executor_add_subscription(&executor, &LED_subscriber, &LED, &LED_subscription_callback, ON_NEW_DATA);
+
 	  rclc_executor_add_timer(&executor, &timer);
 
 
@@ -409,24 +448,22 @@ void StartDefaultTask(void *argument)
 	  osDelay(3000);
 	  uint8_t calibrate[]="w axis0.requested_state 3\n";
 	  HAL_UART_Transmit_IT(&huart2, calibrate, strlen(calibrate));
-//	  osDelay(60000);
+	  osDelay(60000);
 	  HAL_UART_Transmit_IT(&huart6, calibrate, strlen(calibrate));
 	  osDelay(60000);
 	  uint8_t closed_loop[]="w axis0.requested_state 8\n";
 	  HAL_UART_Transmit_IT(&huart2, closed_loop, strlen(closed_loop));
 	  HAL_UART_Transmit_IT(&huart6, closed_loop, strlen(closed_loop));
-	  osDelay(3000);
-	  uint8_t vel0[]="v 0 5\n";
-	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
-	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
+//	  osDelay(3000);
+//	  uint8_t vel0[]="v 0 5\n";
+//	  HAL_UART_Transmit_IT(&huart2, vel0, strlen(vel0));
+//	  HAL_UART_Transmit_IT(&huart6, vel0, strlen(vel0));
 
 
 	  float prev_pub_time = 0;
 //	  right_curr_time = HAL_GetTick();
 //	  left_curr_time = HAL_GetTick();
 	  rclc_executor_spin(&executor);
-	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
-	  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, 1);
 
 	  for(;;)
 	  {
@@ -442,6 +479,7 @@ void StartDefaultTask(void *argument)
 	  rclc_executor_fini(&executor);
 	  rclc_publisher_fini(&enc_vel_publisher, &node);
 	  rcl_subscrption_fini(&subscriber, &node);
+	  rcl_subscrption_fini(&LED_subscriber, &node);
 	  rcl_node_fini(&node);
 	  rclc_support_fini(&support);
 	  rclc_publisher_fini(&enc_vel_publisher, &node);
@@ -473,9 +511,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 1 */
 
   //ROS Publisher periodic callback
+  int LED_THRESHOLD = 7;
   if(htim == &htim6){
-	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_11);
+	  if (is_auto){
+		  ++led_counter;
+		  if (led_counter == LED_THRESHOLD) {
+			  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
+			  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin); // Real
+	//		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1); // DEBUG
+			  led_counter = 0;
+		  }
+	  }
+	  else {
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10,1);
+		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1); // Real
+//		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0); // DEBUG
+	  }
 
   }
 

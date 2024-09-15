@@ -67,8 +67,6 @@ void Error_Handler(void);
 #define enc_left_green_Pin GPIO_PIN_10
 #define enc_left_green_GPIO_Port GPIOE
 #define enc_left_green_EXTI_IRQn EXTI15_10_IRQn
-#define Indicator_LED_Pin GPIO_PIN_11
-#define Indicator_LED_GPIO_Port GPIOE
 #define enc_left_white_Pin GPIO_PIN_12
 #define enc_left_white_GPIO_Port GPIOE
 #define enc_left_white_EXTI_IRQn EXTI15_10_IRQn
@@ -78,6 +76,8 @@ void Error_Handler(void);
 #define enc_right_white_Pin GPIO_PIN_15
 #define enc_right_white_GPIO_Port GPIOE
 #define enc_right_white_EXTI_IRQn EXTI15_10_IRQn
+#define indicator_LED_Pin GPIO_PIN_10
+#define indicator_LED_GPIO_Port GPIOB
 #define LD3_Pin GPIO_PIN_14
 #define LD3_GPIO_Port GPIOB
 #define STLK_RX_Pin GPIO_PIN_8
