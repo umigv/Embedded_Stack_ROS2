@@ -122,6 +122,10 @@ const float TICK_PER_REV = 720;
 rcl_publisher_t enc_vel_publisher;
 geometry_msgs__msg__Twist enc_vel_msg;
 
+rcl_publisher_t estop_mul_publisher;
+std_msgs__msg__Int32 estop_mul_msg;
+
+
 /* USER CODE END 0 */
 
 /**
@@ -280,78 +284,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void publish_callback(rcl_timer_t * timer, int64_t last_call_time)
 {
-	update_right_dist_time_vel();
-	update_left_dist_time_vel();
-	rcl_ret_t rc;
-	RCLC_UNUSED(last_call_time);
-	if (timer != NULL) {
-	  enc_vel_msg.linear.x = (left_vel + right_vel) / 2.0;
-	  enc_vel_msg.angular.z = (right_vel - left_vel) / WHEEL_BASE;
-	  rcl_publish(&enc_vel_publisher, &enc_vel_msg, NULL);
-
-    if (rc == RCL_RET_OK) {
-    	HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin,1);
-    } else {
-    	HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-    }
-  }
-}
-
-void subscription_callback(const void * msgin){
-
-	float left_vel_rpm;
-	float right_vel_rpm;
-	const geometry_msgs__msg__Twist * rec = (const geometry_msgs__msg__Twist *)msgin;
-
-//	if (rec != NULL){
-
-		uint8_t * vel = "v 0 0\n";
-
-		float linear = rec->linear.x;
-		float angular = rec->angular.z;
-
-		left_vel_rpm = estop_mul * LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0)* VEL_TO_RPS;
-		right_vel_rpm = estop_mul * RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0)* VEL_TO_RPS;
-
-		char *msgOutLeft;
-		char *msgOutRight;
-
-		asprintf(&msgOutRight, "v 0 %i\n", (int)right_vel_rpm);
-		if(HAL_UART_Transmit_IT(&huart2, msgOutRight, strlen(msgOutRight)) != HAL_OK){};
-
-		asprintf(&msgOutLeft, "v 0 %i\n", (int)left_vel_rpm);
-		if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
-
-
-		free(msgOutRight);
-		free(msgOutLeft);
-
-		msgOutRight = NULL;
-		msgOutLeft = NULL;
-
-//	}
-
-//	else{
-//
-//
-//		char *msgOutLeft;
-//		char *msgOutRight;
-//
-//		asprintf(&msgOutRight, "v 0 %i\n", (int)right_vel_rpm);
-//		if(HAL_UART_Transmit_IT(&huart2, msgOutRight, strlen(msgOutRight)) != HAL_OK){};
-//
-//		asprintf(&msgOutLeft, "v 0 %i\n", (int)left_vel_rpm);
-//		if(HAL_UART_Transmit_IT(&huart6, msgOutLeft, strlen(msgOutLeft)) != HAL_OK){};
-//
-//
-//		free(msgOutRight);
-//		free(msgOutLeft);
-//
-//		msgOutRight = NULL;
-//		msgOutLeft = NULL;
-//
-//	}
-
+	estop_mul_msg.data = estop_mul;
+	rcl_publish(&estop_mul_publisher, &estop_mul_msg, NULL);
 }
 
 void LED_subscription_callback (const void * msgin){
@@ -430,9 +364,15 @@ void StartDefaultTask(void *argument)
 	    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
 	    "/enc_vel");
 
+	  rclc_publisher_init_default(
+		&estop_mul_publisher,
+		&node,
+		ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+		"/estop_mul");
+
 
 	  rclc_executor_t executor;
-	  rclc_executor_init(&executor, &support.context, 3, &allocator);
+	  rclc_executor_init(&executor, &support.context, 4, &allocator);
 	  rclc_executor_add_subscription(&executor, &subscriber, &rec, &subscription_callback, ON_NEW_DATA);
 	  rclc_executor_add_subscription(&executor, &LED_subscriber, &LED, &LED_subscription_callback, ON_NEW_DATA);
 
@@ -478,11 +418,11 @@ void StartDefaultTask(void *argument)
 	  }
 	  rclc_executor_fini(&executor);
 	  rclc_publisher_fini(&enc_vel_publisher, &node);
+	  rclc_publisher_fini(&estop_mul_publisher, &node);
 	  rcl_subscrption_fini(&subscriber, &node);
 	  rcl_subscrption_fini(&LED_subscriber, &node);
 	  rcl_node_fini(&node);
 	  rclc_support_fini(&support);
-	  rclc_publisher_fini(&enc_vel_publisher, &node);
 
       rcl_timer_fini(&timer);
 
