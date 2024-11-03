@@ -1,0 +1,22 @@
+|RECORD=BOM|VERSION=6|FILENAME=C:\Users\Public\Documents\Altium\STM and Odrive Board\Arduino and Sensors.BomDoc|KIND=ALTIUM_DESIGNER_LIVEBOM|DATE=28.10.2024|TIME=23:44:45|CURRENCY=USD|PRODUCTIONQUANTITY=1|PERUNITTARGETPRICE=0|PERUNITACTUALPRICE=0
+|RECORD=GeneralOptions|OPENEXPORTED=False|ADDTOPROJECT=False|FORCEFIT=False|NOTFITTED=False|TEMPLATEFILENAME=|BATCHMODE=0|SUPPLIERPRODQTY=0|SUPPLIERAUTOQTY=False|SUPPLIERUSECACHEDPRICING=False|SUPPLIERCURRENCY=|SOLUTIONSPERITEM=1|SUPPLIERSPERSOLUTION=1|DISPLAYTOTALROW=False|DISPLAYSUBTOTALSFORGROUPS=False|INCLUDEPCBPARAMETERS=False|INCLUDEDBPARAMETERS=False|INCLUDEVAULTPARAMETERS=False|INCLUDECLOUDPARAMETERS=False|INCLUDEDOCUMENTPARAMETERS=False|FILTEROUTRISKYSOLUTIONS=True|DESIGNATORGROUPING=No
+|RECORD=SortOrderOptions|SORTORDER=
+|RECORD=GroupOrderOptions|GROUPORDER=
+|RECORD=VisibleOrderOptions|VISIBLEORDER=Line #=54!Comment=72!Description=100!Designator=78!Quantity=67!Manufacturer 1=101!Manufacturer Part Number 1=170!Manufacturer Lifecycle 1=146!Supplier 1=74!Supplier Part Number 1=142!Supplier Unit Price 1=126!Supplier Subtotal 1=120
+|RECORD=VisibleOrderOptions2|BASEVIEW=Line #=54!Comment=72!Description=-1!Designator=78!Quantity=67!Manufacturer 1=101!Manufacturer Part Number 1=170!Manufacturer Lifecycle 1=146!Supplier 1=74!Supplier Part Number 1=142!Supplier Unit Price 1=126!Supplier Subtotal 1=120|FLATVIEW=Line #=-1!Comment=-1!Description=-1!Designator=-1!Manufacturer 1=101!Manufacturer Part Number 1=170!Manufacturer Lifecycle 1=146!Supplier 1=74!Supplier Part Number 1=142!Supplier Unit Price 1=126!Supplier Subtotal 1=120|CONSOLIDATEDVIEW=Line #=-1!Comment=-1!Description=-1!Designator=-1!Quantity=-1!Manufacturer 1=101!Manufacturer Part Number 1=170!Manufacturer Lifecycle 1=146!Supplier 1=74!Supplier Part Number 1=142!Supplier Unit Price 1=126!Supplier Subtotal 1=120
+|RECORD=CustomColumns|CUSTOMCOLUMNS=
+|RECORD=ColumnsAliases|COLUMNSALIASES=Comment=Name
+|RECORD=FilterOptions|FILTER=
+|RECORD=CheckGroupCompParamsOptions|CHECKGROUPCOMPPARAMS=Comment=0,Description=0,Value=0,Footprint=1
+|RECORD=ManufacturerLinkOptions|MANUFACTURERLINKPARAMETERS=
+|RECORD=FavoriteSuppliers|PARTSOURCES=|SUPPLIERS=|USESUPPLIERORDER=False
+|RECORD=CheckOptions|CHECKLEVELS=
+|RECORD=ExternalCheckOptions|CHECKLEVELS=
+|RECORD=LineNumberingOptions|STARTVALUE=|INCREMENT=
+|RECORD=Catalog|DBLINKFILEPATH=
+|RECORD=CatalogItem|ITEMTYPE=Automatic-NonVault|UNIQUEID=A000067.IntLib\A000067|DESIGNITEMID=A000067|ITEMSOURCE=A000067.IntLib|STATUS=Unknown|DESCRIPTION=8-bit board with 54 digital pins, 16 analog inputs, and 4 serial ports.|USERCOMMENTS=A000067|NOTE=|LINENUMBER=|SELECTEDPARAMETERSHASH=,"8-bit board with 54 digital pins, 16 analog inputs, and 4 serial ports.",A000067|COMPONENTPARAMETERS=Check_prices=https://www.snapeda.com/parts/Arduino%20Mega%202560%20Rev3/Arduino/view-part/?ref=eda,Comment=A000067,"Component Kind=Standard","Description=8-bit board with 54 digital pins, 16 analog inputs, and 4 serial ports.",Footprint=ARDUINO_A000067,"Ibis Model=","Library Name=A000067.IntLib","Library Reference=A000067",MF=Arduino,"MP=Arduino Mega 2560 Rev3","Package=Non-Standard Arduino",PCB3D=,"Pin Info=","Signal Integrity=",Simulation=,SnapEDA_Link=https://www.snapeda.com/parts/Arduino%20Mega%202560%20Rev3/Arduino/view-part/?ref=snap,Value=|CUSTOMPARAMETERS=
+|RECORD=PartChoiceGroups|GROUPBYFIELDCOUNT=0
+|RECORD=CatalogItem|ITEMTYPE=Automatic-NonVault|UNIQUEID=Adafruit BNO055.SchLib\Component_1|DESIGNITEMID=Component_1|ITEMSOURCE=Adafruit BNO055.SchLib|STATUS=Unknown|DESCRIPTION=|USERCOMMENTS=Adafruit BNO055|NOTE=|LINENUMBER=|SELECTEDPARAMETERSHASH=,"Adafruit BNO055"|COMPONENTPARAMETERS="Comment=Adafruit BNO055","Component Kind=Standard",Description=,Footprint=PCBComponent_1,"Ibis Model=","Library Name=Adafruit BNO055.SchLib","Library Reference=Component_1",PCB3D=,"Pin Info=","Signal Integrity=",Simulation=|CUSTOMPARAMETERS=
+|RECORD=PartChoiceGroups|GROUPBYFIELDCOUNT=0
+|RECORD=CatalogItem|ITEMTYPE=Automatic-NonVault|UNIQUEID=Ultrasonic Header.SchLib\Component_1|DESIGNITEMID=Component_1|ITEMSOURCE=Ultrasonic Header.SchLib|STATUS=Unknown|DESCRIPTION=|USERCOMMENTS=Ultrasonic Sensor|NOTE=|LINENUMBER=|SELECTEDPARAMETERSHASH=,"Ultrasonic Sensor"|COMPONENTPARAMETERS="Comment=Ultrasonic Sensor","Component Kind=Standard",Description=,Footprint=,"Ibis Model=","Library Name=Ultrasonic Header.SchLib","Library Reference=Component_1",PCB3D=,"Pin Info=","Signal Integrity=",Simulation=|CUSTOMPARAMETERS=
+|RECORD=PartChoiceGroups|GROUPBYFIELDCOUNT=0
