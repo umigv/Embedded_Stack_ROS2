@@ -84,6 +84,23 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [Document3]
+DocumentPath=A000067\ARDUINO_A000067.PcbLib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=0
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=XNWBQQWU
+
+[Document4]
 DocumentPath=Adafruit BNO055.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -100,7 +117,24 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=GJLWQNWE
 
-[Document4]
+[Document5]
+DocumentPath=A000067\A000067.SchLib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=0
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=KCHUQTEJ
+
+[Document6]
 DocumentPath=Adafruit BNO055.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -117,7 +151,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=IVUUHJCX
 
-[Document5]
+[Document7]
 DocumentPath=Ultrasonic Header.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -134,7 +168,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=YFUBIBUY
 
-[Document6]
+[Document8]
 DocumentPath=Ultrasonic Header.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -151,7 +185,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=DVORNAMU
 
-[Document7]
+[Document9]
 DocumentPath=PCB.PcbDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
