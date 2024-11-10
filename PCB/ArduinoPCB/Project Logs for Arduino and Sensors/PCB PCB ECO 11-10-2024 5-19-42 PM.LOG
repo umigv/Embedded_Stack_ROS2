@@ -1,0 +1,12 @@
+Added Component: Designator=*(PCBComponent_1)
+Added Component: Designator=A?(ARDUINO_A000067)
+Add component (AddParameter): Name = "Check_prices"; Value = "https://www.snapeda.com/parts/Arduino%20Mega%202560%20Rev3/Arduino/view-part/?ref=eda"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MF"; Value = "Arduino"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MP"; Value = "Arduino Mega 2560 Rev3"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Package"; Value = "Non-Standard Arduino"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "SnapEDA_Link"; Value = "https://www.snapeda.com/parts/Arduino%20Mega%202560%20Rev3/Arduino/view-part/?ref=snap"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Value"; Value = ""; VariantName = "[No Variations]"
+Added Component: Designator=ADAFRUIT BNO055(PCBComponent_1)
+Added Member To Class: ClassName=Arduino Member=Component * Component_1
+Added Member To Class: ClassName=Arduino Member=Component A? A000067
+Added Member To Class: ClassName=Arduino Member=Component ADAFRUIT BNO055

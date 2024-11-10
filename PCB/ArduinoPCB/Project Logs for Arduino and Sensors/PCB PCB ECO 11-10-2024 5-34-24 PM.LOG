@@ -1,0 +1,9 @@
+Change Component Designator: OldDesignator=A? NewDesignator=A1
+Added Pin To Net: NetName=5V Pin=A1-5V_1
+Added Net: Name=5V
+Added Pin To Net: NetName=GND Pin=*-1
+Added Pin To Net: NetName=GND Pin=A1-GND2
+Added Pin To Net: NetName=GND Pin=ADAFRUIT BNO055-3
+Added Pin To Net: NetName=GND Pin=ADAFRUIT BNO055-3
+Added Net: Name=GND
+Added Rule: Name=Schematic Supply Nets

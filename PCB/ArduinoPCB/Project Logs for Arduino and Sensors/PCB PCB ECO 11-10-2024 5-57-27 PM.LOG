@@ -1,0 +1,6 @@
+Removed Pin From Net: NetName=GND Pin=*-1
+Added Pin To Net: NetName=GND3 Pin=*-1
+Added Pin To Net: NetName=GND3 Pin=A1-GND3
+Added Net: Name=GND3
+Added Member To Class: ClassName=Arduino Member=Component A1 A000067
+Added Rule: Name=Schematic Supply Nets_1

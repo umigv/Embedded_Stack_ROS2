@@ -1,0 +1,18 @@
+Added Pin To Net: NetName=5V Pin=*-4
+Added Pin To Net: NetName=5V Pin=ADAFRUIT BNO055-1
+Added Pin To Net: NetName=5V Pin=ADAFRUIT BNO055-1
+Added Pin To Net: NetName=Net*_2 Pin=*-2
+Added Pin To Net: NetName=Net*_2 Pin=A1-4
+Added Net: Name=Net*_2
+Added Pin To Net: NetName=Net*_3 Pin=*-3
+Added Pin To Net: NetName=Net*_3 Pin=A1-3
+Added Net: Name=Net*_3
+Added Pin To Net: NetName=NetA1_2 Pin=A1-2
+Added Net: Name=NetA1_2
+Added Pin To Net: NetName=NetA1_20 Pin=A1-20
+Added Pin To Net: NetName=NetA1_20 Pin=ADAFRUIT BNO055-4
+Added Pin To Net: NetName=NetA1_20 Pin=ADAFRUIT BNO055-4
+Added Net: Name=NetA1_20
+Added Pin To Net: NetName=NetA1_21 Pin=A1-21
+Added Pin To Net: NetName=NetA1_21 Pin=ADAFRUIT BNO055-5
+Added Net: Name=NetA1_21
