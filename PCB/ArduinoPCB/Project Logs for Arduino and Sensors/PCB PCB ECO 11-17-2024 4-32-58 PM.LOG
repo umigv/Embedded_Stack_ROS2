@@ -1,0 +1,4 @@
+Change Component Designator: OldDesignator=* NewDesignator=HC-SR04
+Change Component Designator: OldDesignator=ADAFRUIT BNO055 NewDesignator=BNO055
+Change Net Name : Old Net Name=Net*_2 New Net Name=NetA1_4
+Change Net Name : Old Net Name=Net*_3 New Net Name=NetA1_3
