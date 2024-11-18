@@ -1,0 +1,6 @@
+Added Component: Designator=HC-SR?(PCBComponent_1)
+Added Pin To Net: NetName=GND3 Pin=HC-SR?-1
+Added Pin To Net: NetName=NetArduino Mega?_4 Pin=HC-SR?-2
+Added Pin To Net: NetName=NetArduino Mega?_3 Pin=HC-SR?-3
+Added Pin To Net: NetName=5V Pin=HC-SR?-4
+Added Member To Class: ClassName=ArduinoandSensors Member=Component HC-SR? HC-SR04

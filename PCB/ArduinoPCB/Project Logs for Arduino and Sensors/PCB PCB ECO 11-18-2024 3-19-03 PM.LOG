@@ -1,0 +1,45 @@
+Change Component Designator: OldDesignator=Adafruit BNO055 NewDesignator=Adafruit BNO1
+Added Component: Designator=Arduino Mega1(ARDUINO_A000067)
+Add component (AddParameter): Name = "Check_prices"; Value = "https://www.snapeda.com/parts/Arduino%20Mega%202560%20Rev3/Arduino/view-part/?ref=eda"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MF"; Value = "Arduino"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MP"; Value = "Arduino Mega 2560 Rev3"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Package"; Value = "Non-Standard Arduino"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "SnapEDA_Link"; Value = "https://www.snapeda.com/parts/Arduino%20Mega%202560%20Rev3/Arduino/view-part/?ref=snap"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Value"; Value = ""; VariantName = "[No Variations]"
+Added Component: Designator=BNO1(MODULE_2472)
+Add component (AddParameter): Name = "Check_prices"; Value = "https://www.snapeda.com/parts/2472/Adafruit+Industries/view-part/?ref=eda"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MF"; Value = "Adafruit"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MP"; Value = "2472"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Package"; Value = "Non-Standard Adafruit"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "SnapEDA_Link"; Value = "https://www.snapeda.com/parts/2472/Adafruit+Industries/view-part/?ref=snap"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Value"; Value = ""; VariantName = "[No Variations]"
+Add Component: Footprint Not Found PCBComponent_1
+Add Component: Footprint Not Found PCBComponent_1
+Added Pin To Net: NetName=5V Pin=Arduino Mega1-5V_1
+Added Pin To Net: NetName=GND3 Pin=Arduino Mega1-GND3
+Added Pin To Net: NetName=5V Pin=BNO1-1
+Add Pin To Net: Unknown Pin: Pin HC-SR2-1
+Add Pin To Net: Unknown Pin: Pin HC-SR2-4
+Add Pin To Net: Unknown Pin: Pin HC-SR04-1
+Add Pin To Net: Unknown Pin: Pin HC-SR04-2
+Add Pin To Net: Unknown Pin: Pin HC-SR04-3
+Add Pin To Net: Unknown Pin: Pin HC-SR04-4
+Added Pin To Net: NetName=GND1 Pin=Arduino Mega1-GND1
+Added Pin To Net: NetName=GND1 Pin=BNO1-3
+Added Net: Name=GND1
+Added Pin To Net: NetName=NetArduino Mega1_2 Pin=Arduino Mega1-2
+Added Pin To Net: NetName=NetArduino Mega1_2 Pin=BNO1-8
+Added Net: Name=NetArduino Mega1_2
+Added Pin To Net: NetName=NetArduino Mega1_3 Pin=Arduino Mega1-3
+Added Net: Name=NetArduino Mega1_3
+Added Pin To Net: NetName=NetArduino Mega1_4 Pin=Arduino Mega1-4
+Added Net: Name=NetArduino Mega1_4
+Added Pin To Net: NetName=NetArduino Mega1_20 Pin=Arduino Mega1-20
+Added Pin To Net: NetName=NetArduino Mega1_20 Pin=BNO1-4
+Added Net: Name=NetArduino Mega1_20
+Added Pin To Net: NetName=NetArduino Mega1_21 Pin=Arduino Mega1-21
+Added Pin To Net: NetName=NetArduino Mega1_21 Pin=BNO1-5
+Added Net: Name=NetArduino Mega1_21
+Added Class: Name=ArduinoandSensors
+Add Class Member: Failed to add class member : Component HC-SR04 (HC-SR1)
+Added Rule: Name=Schematic Supply Nets_2

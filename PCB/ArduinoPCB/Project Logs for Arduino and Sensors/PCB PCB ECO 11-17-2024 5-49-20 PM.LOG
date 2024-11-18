@@ -1,0 +1,20 @@
+Removed Pin From Net: NetName=5V Pin=BNO055-1
+Removed Pin From Net: NetName=GND Pin=BNO055-3
+Removed Pin From Net: NetName=NetA1_20 Pin=BNO055-4
+Removed Pin From Net: NetName=NetA1_21 Pin=BNO055-5
+Removed Pin From Net: NetName=NetA1_2 Pin=BNO055-8
+Removed Member From Class: ClassName=Arduino Member=BNO055
+Added Component: Designator=U?(MODULE_2472)
+Add component (AddParameter): Name = "Check_prices"; Value = "https://www.snapeda.com/parts/2472/Adafruit+Industries/view-part/?ref=eda"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MF"; Value = "Adafruit"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MP"; Value = "2472"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Package"; Value = "Non-Standard Adafruit"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "SnapEDA_Link"; Value = "https://www.snapeda.com/parts/2472/Adafruit+Industries/view-part/?ref=snap"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Value"; Value = ""; VariantName = "[No Variations]"
+Added Pin To Net: NetName=5V Pin=U?-1
+Added Pin To Net: NetName=GND Pin=U?-3
+Added Pin To Net: NetName=NetA1_20 Pin=U?-4
+Added Pin To Net: NetName=NetA1_21 Pin=U?-5
+Added Pin To Net: NetName=NetA1_2 Pin=U?-8
+Added Member To Class: ClassName=Arduino Member=Component A1 A000067
+Added Member To Class: ClassName=Arduino Member=Component U? 2472

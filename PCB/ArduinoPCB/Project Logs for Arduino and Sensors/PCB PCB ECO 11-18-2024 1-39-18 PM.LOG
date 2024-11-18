@@ -1,0 +1,35 @@
+Added Component: Designator=A1(ARDUINO_A000067)
+Add component (AddParameter): Name = "Check_prices"; Value = "https://www.snapeda.com/parts/Arduino%20Mega%202560%20Rev3/Arduino/view-part/?ref=eda"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MF"; Value = "Arduino"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MP"; Value = "Arduino Mega 2560 Rev3"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Package"; Value = "Non-Standard Arduino"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "SnapEDA_Link"; Value = "https://www.snapeda.com/parts/Arduino%20Mega%202560%20Rev3/Arduino/view-part/?ref=snap"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Value"; Value = ""; VariantName = "[No Variations]"
+Added Component: Designator=Adafruit BNO055(MODULE_2472)
+Add component (AddParameter): Name = "Check_prices"; Value = "https://www.snapeda.com/parts/2472/Adafruit+Industries/view-part/?ref=eda"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MF"; Value = "Adafruit"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "MP"; Value = "2472"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Package"; Value = "Non-Standard Adafruit"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "SnapEDA_Link"; Value = "https://www.snapeda.com/parts/2472/Adafruit+Industries/view-part/?ref=snap"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Value"; Value = ""; VariantName = "[No Variations]"
+Add Component: Footprint Not Found PCBComponent_1
+Added Pin To Net: NetName=NetA1_2 Pin=A1-2
+Added Pin To Net: NetName=NetA1_3 Pin=A1-3
+Added Pin To Net: NetName=NetA1_4 Pin=A1-4
+Added Pin To Net: NetName=5V Pin=A1-5V_1
+Added Pin To Net: NetName=NetA1_20 Pin=A1-20
+Added Pin To Net: NetName=NetA1_21 Pin=A1-21
+Added Pin To Net: NetName=GND Pin=A1-GND2
+Added Pin To Net: NetName=GND3 Pin=A1-GND3
+Added Pin To Net: NetName=5V Pin=Adafruit BNO055-1
+Added Pin To Net: NetName=GND Pin=Adafruit BNO055-3
+Added Pin To Net: NetName=NetA1_20 Pin=Adafruit BNO055-4
+Added Pin To Net: NetName=NetA1_21 Pin=Adafruit BNO055-5
+Added Pin To Net: NetName=NetA1_2 Pin=Adafruit BNO055-8
+Add Pin To Net: Unknown Pin: Pin HC-SR04-1
+Add Pin To Net: Unknown Pin: Pin HC-SR04-2
+Add Pin To Net: Unknown Pin: Pin HC-SR04-3
+Add Pin To Net: Unknown Pin: Pin HC-SR04-4
+Added Member To Class: ClassName=Arduino Member=Component A1 A000067
+Added Member To Class: ClassName=Arduino Member=Component Adafruit BNO055 2472
+Add Class Member: Failed to add class member : Component HC-SR04 Component_1

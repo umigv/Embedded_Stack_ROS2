@@ -1,0 +1,14 @@
+[DesignatorManager]
+LogicalDesignator0=
+LogicalPartID0=1
+DocumentName0=Arduino.SchDoc
+ChannelName0=Arduino
+UniqueID0=\VCNPVMJF
+PhysicalDesignator0=HC-SR04
+PhysicalDesignatorLocked0=1
+
+[SheetNumberManager]
+SheetNumberOrder=Display Order
+SheetNumberMethod=Increasing
+
+
