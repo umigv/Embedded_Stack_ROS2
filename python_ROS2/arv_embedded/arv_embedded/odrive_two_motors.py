@@ -10,13 +10,15 @@ PI = 3.14159265359
 VEL_TO_RPS = 1.0 / (WHEEL_DIAMETER * PI) * 98.0 / 3.0
 LEFT_POLARITY = 1
 RIGHT_POLARITY = -1
+ESTOP_FILE_PATH = "/tmp/estop_value.txt"
+
 
 class DualODriveController(Node):
     def __init__(self):
         super().__init__('dual_odrive_controller')
 
         #serial may need to be converted to hex?
-        self.odrv0 = odrive.find_any(serial_number="384934743539") 
+        self.odrv0 = odrive.find_any(serial_number="3972354E3231") 
         self.odrv1 = odrive.find_any(serial_number="396F35573231")
 
         self.calibrate_motor()
@@ -30,7 +32,7 @@ class DualODriveController(Node):
 
     def calibrate_motor(self):
 
-        self.get_logger().info("Calibrating...")
+        '''self.get_logger().info("Calibrating...")
         self.odrv0.axis0.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
         while (self.odrv0.axis0.current_state != AXIS_STATE_IDLE):
             pass
@@ -38,6 +40,7 @@ class DualODriveController(Node):
         while (self.odrv1.axis0.current_state != AXIS_STATE_IDLE):
             pass
         self.get_logger().info("Calibration complete")
+        '''
 
         self.odrv0.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
         self.odrv0.axis0.controller.config.control_mode = CONTROL_MODE_VELOCITY_CONTROL
@@ -45,16 +48,28 @@ class DualODriveController(Node):
         self.odrv1.axis0.controller.config.control_mode = CONTROL_MODE_VELOCITY_CONTROL
 
     def cmd_vel_callback(self, msg):
+        estop_value = 1  # Default value
+        try:
+            with open(ESTOP_FILE_PATH, 'r') as f:
+                estop_value = int(f.read().strip())
+        except:
+            estop_value = 1
+
         linear = msg.linear.x
         angular = msg.angular.z
         left_vel = LEFT_POLARITY * (linear - WHEEL_BASE * angular / 2.0)* VEL_TO_RPS
         right_vel = RIGHT_POLARITY * (linear + WHEEL_BASE * angular / 2.0)* VEL_TO_RPS
 
-        self.odrv0.axis0.controller.input_vel = left_vel
-        self.odrv1.axis0.controller.input_vel = right_vel
+        if estop_value == 0:
+            self.odrv0.axis0.controller.input_vel = 0
+            self.odrv1.axis0.controller.input_vel = 0
+        else:
+            self.odrv0.axis0.controller.input_vel = left_vel
+            self.odrv1.axis0.controller.input_vel = right_vel
+
 
     def publish_enc_vel(self):
-        enc_vel_left = self.odrv0.axis0.vel_estimate / VEL_TO_RPS
+        enc_vel_left = self.odrv0.axis0.vel_estimate / VEL_TO_RPS 
         enc_vel_right = self.odrv1.axis0.vel_estimate / VEL_TO_RPS
         msg = Twist()
         msg.linear.x = (enc_vel_left + enc_vel_right) / 2

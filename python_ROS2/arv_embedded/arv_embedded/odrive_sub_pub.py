@@ -9,9 +9,9 @@ class ODriveController(Node):
     def __init__(self):
         super().__init__('odrive_controller')
         
-        self.odrv0 = odrive.find_any()
+        #self.odrv0 = odrive.find_any()
 
-        #self.odrv0 = odrive.find_any(serial_number="3972354E3231")
+        self.odrv0 = odrive.find_any(serial_number="3972354E3231")
         #self.odrv0 = odrive.find_any(serial_number="393F35423231")
 
         self.calibrate_motor()

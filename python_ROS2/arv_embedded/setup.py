@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             "odrive_controller = arv_embedded.odrive_sub_pub:main",
             "dual_odrive_controller = arv_embedded.odrive_two_motors:main",
-            "LED_subscriber = arv_embedded.led_subscriber:main"
+            "LED_subscriber = arv_embedded.led_subscriber:main",
+            "enc_odom_publisher = arv_embedded.enc_odom_publisher:main"
         ],
     },
 )

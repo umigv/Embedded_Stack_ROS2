@@ -33,11 +33,32 @@ options:
     state: enabled
 
 blocks:
+- name: cov_time
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: tab@2
+    label: ''
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: int
+    start: '0'
+    step: '1'
+    stop: '100'
+    value: '50'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [744, 4.0]
+    rotation: 0
+    state: true
 - name: samp_rate
   id: variable
   parameters:
     comment: ''
-    value: 0.5e6
+    value: 0.1e6
   states:
     bus_sink: false
     bus_source: false
@@ -45,6 +66,39 @@ blocks:
     coordinate: [264, 24.0]
     rotation: 0
     state: enabled
+- name: blocks_char_to_float_0
+  id: blocks_char_to_float
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    scale: '1'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1240, 192.0]
+    rotation: 0
+    state: true
+- name: blocks_complex_to_float_0
+  id: blocks_complex_to_float
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [936, 160.0]
+    rotation: 0
+    state: true
 - name: blocks_complex_to_mag_0
   id: blocks_complex_to_mag
   parameters:
@@ -58,7 +112,27 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [800, 144.0]
+    coordinate: [600, 520.0]
+    rotation: 0
+    state: true
+- name: blocks_peak_detector_xb_0
+  id: blocks_peak_detector_xb
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha: '0.001'
+    comment: ''
+    look_ahead: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    threshold_factor_fall: '0.02'
+    threshold_factor_rise: '0.02'
+    type: float
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1072, 284.0]
     rotation: 0
     state: true
 - name: dc_blocker_xx_1
@@ -79,6 +153,126 @@ blocks:
     coordinate: [304, 496.0]
     rotation: 0
     state: true
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport pmt\n\nclass\
+      \ blk(gr.sync_block):  \n    \"\"\"Custom block to trigger estop with zero delay\
+      \ and spike rejection\"\"\"\n\n    def __init__(self, threshold_high=300, threshold_low=280,\
+      \ cooldown=0.1):\n        gr.sync_block.__init__(\n            self,\n     \
+      \       name='Estop Trigger',  \n            in_sig=[np.complex64],  \n    \
+      \        out_sig=[]              \n        )\n        self.threshold_high =\
+      \ threshold_high  # Upper threshold for trigger\n        self.threshold_low\
+      \ = threshold_low  # Lower threshold for reset (hysteresis)\n        self.cooldown\
+      \ = cooldown  # Cooldown period (seconds)\n        self.estop_state = 1  # 1\
+      \ = released, 0 = triggered\n        self.last_toggle_time = -self.cooldown\
+      \  # Used to track the last trigger time\n        self.previous_sample = 0 \
+      \ # Tracks the last sample to detect edges\n\n        # Force small input chunks\
+      \ to reduce delay\n        self.set_min_noutput_items(1)  # Force processing\
+      \ for small batches\n\n        # Register an output message port for GNU Radio\
+      \ message passing\n        self.message_port_register_out(pmt.intern('estop_state'))\n\
+      \n    def work(self, input_items, output_items):\n        current_time = gr.high_res_timer_now()\
+      \ / 1e9  # Get current time in seconds\n        real_part = np.real(input_items[0])\
+      \  # Extract real part of the input\n        \n        # **1. Edge Detection**\n\
+      \        # Detect where the signal crosses from below threshold_high to above\
+      \ threshold_high\n        crossing_edge_indices = np.where((real_part[:-1] <\
+      \ self.threshold_high) & (real_part[1:] > self.threshold_high))[0]\n\n     \
+      \   if len(crossing_edge_indices) > 0:  # If we detect a crossing edge\n   \
+      \         if current_time - self.last_toggle_time >= self.cooldown:  # Check\
+      \ cooldown logic\n                # **2. Trigger Estop**\n                self.estop_state\
+      \ = 1 - self.estop_state  # Toggle between 0 (triggered) and 1 (released)\n\
+      \                self.last_toggle_time = current_time  # Update last toggle\
+      \ time\n\n                # **3. Send Estop State Message**\n              \
+      \  self.message_port_pub(pmt.intern('estop_state'), pmt.from_bool(self.estop_state))\n\
+      \n                if self.estop_state == 0:\n                    print(\"Estop\
+      \ Triggered\")\n                else:\n                    print(\"Estop Released\"\
+      )\n\n        # **4. Update Previous Sample**\n        self.previous_sample =\
+      \ real_part[-1]  # Update the last sample\n\n        return len(input_items[0])\n\
+      \n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    cooldown: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    threshold_high: '500'
+    threshold_low: '499'
+  states:
+    _io_cache: ('Estop Trigger', 'blk', [('threshold_high', '300'), ('threshold_low',
+      '280'), ('cooldown', '0.1')], [('0', 'complex', 1)], [('estop_state', 'message',
+      1)], 'Custom block to trigger estop with zero delay and spike rejection', ['cooldown',
+      'threshold_high', 'threshold_low'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1296, 644.0]
+    rotation: 0
+    state: disabled
+- name: epy_block_1
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nimport time\nfrom gnuradio import gr\n\nclass\
+      \ blk(gr.sync_block):  \n    \"\"\"Embedded Python Block to toggle a variable\
+      \ on input value 1.0 with cooldown\"\"\"\n\n    def __init__(self):\n      \
+      \  gr.sync_block.__init__(\n            self,\n            name='Toggle Variable\
+      \ Block',  # Block name\n            in_sig=[np.float32],  # Correct input signal\
+      \ type\n            out_sig=None          # No output signal\n        )\n  \
+      \      self.toggled_variable = False  # Variable to toggle\n        self.last_toggle_time\
+      \ = 0      # Last time the variable was toggled\n        self.cooldown = 2 \
+      \             # Cooldown period in seconds\n\n    def work(self, input_items,\
+      \ output_items):\n        current_time = time.time()  # Get the current time\n\
+      \        for value in input_items[0]:  # Iterate through input float values\n\
+      \            if value == 1.0 and (current_time - self.last_toggle_time) >= self.cooldown:\n\
+      \                # Toggle the variable\n                self.toggled_variable\
+      \ = not self.toggled_variable\n                self.last_toggle_time = current_time\
+      \  # Update the last toggle time\n                \n                # Print\
+      \ the toggled value\n                print(f\"Toggled Variable: {self.toggled_variable}\"\
+      )\n        \n        return len(input_items[0])\n\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Toggle Variable Block', 'blk', [], [('0', 'float', 1)], [], 'Embedded
+      Python Block to toggle a variable on input value 1.0 with cooldown', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1288, 608.0]
+    rotation: 0
+    state: disabled
+- name: epy_block_2
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nimport time\nimport multiprocessing\nfrom gnuradio\
+      \ import gr\n\n# Shared memory variable (boolean type)\nshared_variable = multiprocessing.Value('b',\
+      \ False)\n\nclass blk(gr.sync_block):\n    \"\"\"Toggle Variable Block with\
+      \ Shared Memory\"\"\"\n\n    def __init__(self):\n        gr.sync_block.__init__(\n\
+      \            self,\n            name='Toggle Variable Block with Shared Memory',\n\
+      \            in_sig=[np.float32],\n            out_sig=None\n        )\n   \
+      \     self.last_toggle_time = 0\n        self.cooldown = 2\n\n    def work(self,\
+      \ input_items, output_items):\n        current_time = time.time()\n        for\
+      \ value in input_items[0]:\n            if value == 1.0 and (current_time -\
+      \ self.last_toggle_time) >= self.cooldown:\n                with shared_variable.get_lock():\n\
+      \                    shared_variable.value = not shared_variable.value\n   \
+      \                 print(f\"Toggled Variable: {shared_variable.value}\")\n  \
+      \              self.last_toggle_time = current_time\n\n        return len(input_items[0])\n\
+      \n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Toggle Variable Block with Shared Memory', 'blk', [], [('0', 'float',
+      1)], [], 'Toggle Variable Block with Shared Memory', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1272, 376.0]
+    rotation: 0
+    state: enabled
 - name: freq_xlating_fir_filter_xxx_0
   id: freq_xlating_fir_filter_xxx
   parameters:
@@ -90,13 +284,26 @@ blocks:
     maxoutbuf: '0'
     minoutbuf: '0'
     samp_rate: samp_rate
-    taps: '[0.7] * 750'
+    taps: np.arange(cov_time)
     type: fcf
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [968, 236.0]
+    coordinate: [744, 364.0]
+    rotation: 0
+    state: true
+- name: import_0
+  id: import
+  parameters:
+    alias: ''
+    comment: ''
+    imports: import numpy as np
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [424, 24.0]
     rotation: 0
     state: true
 - name: low_pass_filter_0
@@ -120,10 +327,10 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [552, 256.0]
+    coordinate: [480, 296.0]
     rotation: 0
     state: true
-- name: qtgui_time_sink_x_1
+- name: qtgui_time_sink_x_0
   id: qtgui_time_sink_x
   parameters:
     affinity: ''
@@ -151,10 +358,10 @@ blocks:
     color8: dark red
     color9: dark green
     comment: ''
-    ctrlpanel: 'True'
+    ctrlpanel: 'False'
     entags: 'True'
     grid: 'False'
-    gui_hint: ''
+    gui_hint: tab@2
     label1: Signal 1
     label10: Signal 10
     label2: Signal 2
@@ -197,7 +404,7 @@ blocks:
     tr_mode: qtgui.TRIG_MODE_FREE
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
-    type: complex
+    type: float
     update_time: '0.10'
     width1: '1'
     width10: '1'
@@ -210,17 +417,17 @@ blocks:
     width8: '1'
     width9: '1'
     ylabel: Amplitude
-    ymax: '500'
-    ymin: '100'
+    ymax: '1'
+    ymin: '-1'
     yunit: '""'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1192, 60.0]
+    coordinate: [1328, 20.0]
     rotation: 0
     state: true
-- name: qtgui_time_sink_x_2
+- name: qtgui_time_sink_x_1
   id: qtgui_time_sink_x
   parameters:
     affinity: ''
@@ -235,7 +442,7 @@ blocks:
     alpha7: '1.0'
     alpha8: '1.0'
     alpha9: '1.0'
-    autoscale: 'False'
+    autoscale: 'True'
     axislabels: 'True'
     color1: blue
     color10: dark blue
@@ -251,7 +458,7 @@ blocks:
     ctrlpanel: 'True'
     entags: 'True'
     grid: 'False'
-    gui_hint: ''
+    gui_hint: tab@1
     label1: Signal 1
     label10: Signal 10
     label2: Signal 2
@@ -307,6 +514,103 @@ blocks:
     width8: '1'
     width9: '1'
     ylabel: Amplitude
+    ymax: '500'
+    ymin: '100'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1040, 636.0]
+    rotation: 0
+    state: true
+- name: qtgui_time_sink_x_2
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'True'
+    entags: 'True'
+    grid: 'False'
+    gui_hint: tab@0
+    label1: Signal 1
+    label10: Signal 10
+    label2: Signal 2
+    label3: Signal 3
+    label4: Signal 4
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'True'
+    marker1: '0'
+    marker10: '-1'
+    marker2: '3'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: '""'
+    nconnections: '1'
+    size: '1024'
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: float
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
     ymax: '1'
     ymin: '-1'
     yunit: '""'
@@ -314,7 +618,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [824, 404.0]
+    coordinate: [768, 564.0]
     rotation: 0
     state: true
 - name: rtlsdr_source_0
@@ -671,16 +975,55 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [80, 172.0]
+    coordinate: [88, 164.0]
+    rotation: 0
+    state: true
+- name: tab
+  id: qtgui_tab_widget
+  parameters:
+    alias: ''
+    comment: ''
+    gui_hint: ''
+    label0: Tab 0
+    label1: Tab 1
+    label10: Tab 10
+    label11: Tab 11
+    label12: Tab 12
+    label13: Tab 13
+    label14: Tab 14
+    label15: Tab 15
+    label16: Tab 16
+    label17: Tab 17
+    label18: Tab 18
+    label19: Tab 19
+    label2: Tab 2
+    label3: Tab 3
+    label4: Tab 4
+    label5: Tab 5
+    label6: Tab 6
+    label7: Tab 7
+    label8: Tab 8
+    label9: Tab 9
+    num_tabs: '3'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [544, 20.0]
     rotation: 0
     state: true
 
 connections:
+- [blocks_char_to_float_0, '0', epy_block_2, '0']
+- [blocks_char_to_float_0, '0', qtgui_time_sink_x_0, '0']
+- [blocks_complex_to_float_0, '0', blocks_peak_detector_xb_0, '0']
 - [blocks_complex_to_mag_0, '0', freq_xlating_fir_filter_xxx_0, '0']
+- [blocks_complex_to_mag_0, '0', qtgui_time_sink_x_2, '0']
+- [blocks_peak_detector_xb_0, '0', blocks_char_to_float_0, '0']
 - [dc_blocker_xx_1, '0', low_pass_filter_0, '0']
+- [freq_xlating_fir_filter_xxx_0, '0', blocks_complex_to_float_0, '0']
 - [freq_xlating_fir_filter_xxx_0, '0', qtgui_time_sink_x_1, '0']
 - [low_pass_filter_0, '0', blocks_complex_to_mag_0, '0']
-- [low_pass_filter_0, '0', qtgui_time_sink_x_2, '0']
 - [rtlsdr_source_0, '0', dc_blocker_xx_1, '0']
 
 metadata:
