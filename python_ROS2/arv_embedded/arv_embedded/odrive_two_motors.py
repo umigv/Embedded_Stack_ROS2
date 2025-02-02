@@ -69,8 +69,8 @@ class DualODriveController(Node):
 
 
     def publish_enc_vel(self):
-        enc_vel_left = self.odrv0.axis0.vel_estimate / VEL_TO_RPS 
-        enc_vel_right = self.odrv1.axis0.vel_estimate / VEL_TO_RPS
+        enc_vel_left = LEFT_POLARITY * self.odrv0.axis0.vel_estimate / VEL_TO_RPS 
+        enc_vel_right = LEFT_POLARITY * self.odrv1.axis0.vel_estimate / VEL_TO_RPS
         msg = Twist()
         msg.linear.x = (enc_vel_left + enc_vel_right) / 2
         msg.angular.z = (enc_vel_right - enc_vel_left) / WHEEL_BASE
