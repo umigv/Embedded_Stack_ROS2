@@ -35,7 +35,7 @@ from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
 from gnuradio.qtgui import Range, RangeWidget
 from PyQt5 import QtCore
-import estop_epy_block_2 as epy_block_2  # embedded python block
+import estop_epy_block_3 as epy_block_3  # embedded python block
 import numpy as np
 import osmosdr
 import time
@@ -179,9 +179,9 @@ class estop(gr.top_block, Qt.QWidget):
                 window.WIN_HAMMING,
                 6.76))
         self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_fcf(1, np.arange(cov_time), 0, samp_rate)
-        self.epy_block_2 = epy_block_2.blk()
+        self.epy_block_3 = epy_block_3.blk()
         self.dc_blocker_xx_1 = filter.dc_blocker_cc(32, True)
-        self.blocks_peak_detector_xb_0 = blocks.peak_detector_fb(0.03, 0.03, 1, 0.001)
+        self.blocks_peak_detector_xb_0 = blocks.peak_detector_fb(0.025, 0.025, 1, 0.001)
         self.blocks_complex_to_mag_0 = blocks.complex_to_mag(1)
         self.blocks_complex_to_float_0 = blocks.complex_to_float(1)
         self.blocks_char_to_float_0 = blocks.char_to_float(1, 1)
@@ -190,7 +190,7 @@ class estop(gr.top_block, Qt.QWidget):
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_char_to_float_0, 0), (self.epy_block_2, 0))
+        self.connect((self.blocks_char_to_float_0, 0), (self.epy_block_3, 0))
         self.connect((self.blocks_complex_to_float_0, 0), (self.blocks_peak_detector_xb_0, 0))
         self.connect((self.blocks_complex_to_mag_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
         self.connect((self.blocks_complex_to_mag_0, 0), (self.qtgui_time_sink_x_2, 0))

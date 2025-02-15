@@ -125,14 +125,14 @@ blocks:
     look_ahead: '1'
     maxoutbuf: '0'
     minoutbuf: '0'
-    threshold_factor_fall: '0.03'
-    threshold_factor_rise: '0.03'
+    threshold_factor_fall: '0.025'
+    threshold_factor_rise: '0.025'
     type: float
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1072, 284.0]
+    coordinate: [1056, 276.0]
     rotation: 0
     state: true
 - name: dc_blocker_xx_1
@@ -284,9 +284,48 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1312, 464.0]
+    coordinate: [1208, 512.0]
     rotation: 0
-    state: enabled
+    state: disabled
+- name: epy_block_3
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nimport time\nimport os\nimport sys\nfrom gnuradio\
+      \ import gr\n\nclass blk(gr.sync_block):  \n    \"\"\"Real-time Toggle Integer\
+      \ Block with Immediate File Updates\"\"\"\n    \n    def __init__(self):\n \
+      \       gr.sync_block.__init__(\n            self,\n            name='Real-Time\
+      \ Toggle Integer Block',\n            in_sig=[np.float32],  \n            out_sig=None\
+      \          \n        )\n        \n        self.toggled_value = 1  \n       \
+      \ self.last_toggle_time = 0  \n        self.cooldown = 2  # Cooldown in seconds\n\
+      \        self.file_path = \"/tmp/estop_value.txt\"\n\n        # Create or initialize\
+      \ the file\n        with open(self.file_path, \"w\") as f:\n            f.write(\"\
+      1\\n\")\n\n    def work(self, input_items, output_items):\n        \"\"\"Real-time\
+      \ processing with forced file updates\"\"\"\n        current_time = time.time()\n\
+      \        \n        if input_items[0][0] == 1.0 and (current_time - self.last_toggle_time)\
+      \ >= self.cooldown:\n            self.toggled_value = 1 if self.toggled_value\
+      \ == 0 else 0\n            self.last_toggle_time = current_time  \n\n      \
+      \      # **Force an immediate file update**\n            try:\n            \
+      \    with open(self.file_path, 'w') as f:\n                    f.write(f\"{self.toggled_value}\\\
+      n\")\n                    f.flush()  # Ensure data is written\n            \
+      \        os.fsync(f.fileno())  # Force write to disk\n\n                print(f\"\
+      [TOGGLED] New Value: {self.toggled_value}\")\n                sys.stdout.flush()\
+      \  # Ensure immediate output\n\n            except IOError as e:\n         \
+      \       print(f\"Error writing to file: {e}\")\n\n        return len(input_items[0])\n\
+      \n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Real-Time Toggle Integer Block', 'blk', [], [('0', 'float', 1)],
+      [], 'Real-time Toggle Integer Block with Immediate File Updates', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1312, 416.0]
+    rotation: 0
+    state: true
 - name: freq_xlating_fir_filter_xxx_0
   id: freq_xlating_fir_filter_xxx
   parameters:
@@ -438,7 +477,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1328, 20.0]
+    coordinate: [1376, 52.0]
     rotation: 0
     state: disabled
 - name: qtgui_time_sink_x_1
@@ -634,7 +673,7 @@ blocks:
     bus_structure: null
     coordinate: [768, 564.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: rtlsdr_source_0
   id: rtlsdr_source
   parameters:
@@ -1029,6 +1068,7 @@ blocks:
 
 connections:
 - [blocks_char_to_float_0, '0', epy_block_2, '0']
+- [blocks_char_to_float_0, '0', epy_block_3, '0']
 - [blocks_char_to_float_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_complex_to_float_0, '0', blocks_peak_detector_xb_0, '0']
 - [blocks_complex_to_mag_0, '0', freq_xlating_fir_filter_xxx_0, '0']
