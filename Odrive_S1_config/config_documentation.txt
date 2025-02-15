@@ -1,0 +1,2 @@
+correct_odrive_config: original config, used in 2024 competition (robot cannot move on the ground if input velocity < 0.4) 
+feb15_25_config: proportional gain increased from 0.01 to 0.014, integral gain increased from 0 to 0.0014 (reduce overcurrent error, better straight line tracking) 
