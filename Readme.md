@@ -57,7 +57,10 @@ sudo nano /etc/udev/rules.d/99-arduino.rules
 2. in the file that opens, add:
 SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", ATTRS{serial}=="557363130383514121D2", SYMLINK+="LED_Arduino", MODE="0666"
 3. reboot system
+
 Note: 
-run "lsusb" to get the idVendor and idProduct
-to get serial number, make sure device is connected to ACM0, then run " udevadm info -a -n /dev/ttyACM0 | grep 'ATTRS{serial}' "
+
+Run "lsusb" to get the idVendor and idProduct.
+
+To get serial number, make sure device is connected to ACM0, then run " udevadm info -a -n /dev/ttyACM0 | grep 'ATTRS{serial}' ".
 
