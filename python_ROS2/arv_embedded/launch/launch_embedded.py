@@ -6,13 +6,7 @@ def generate_launch_description():
     # Declare launch argument for LED control
     use_LED_arg = launch.substitutions.LaunchConfiguration('use_LED')
 
-	# USB permission action (only executed if use_LED is true)
-    usb_permission_action = launch.actions.ExecuteProcess(
-        cmd=["bash", "-c", "'sudo chmod 666 /dev/ttyACM0'"],
-        shell=True,
-        output='screen',
-        condition=launch.conditions.IfCondition(use_LED_arg)
-    )
+
     # Define the LED node (only launched if use_LED is true)
     led_node = launch_ros.actions.Node(
         package='arv_embedded', 
@@ -35,8 +29,7 @@ def generate_launch_description():
     )
 
     return launch.LaunchDescription([
-        launch.actions.DeclareLaunchArgument('use_LED', default_value='false', description="Enable LED node and set USB permissions"),
-        usb_permission_action,
+        launch.actions.DeclareLaunchArgument('use_LED', default_value='false', description="Enable LED node"),
         dual_odrive_controller_node,
         enc_odom_publisher_node,
         led_node
