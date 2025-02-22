@@ -10,6 +10,10 @@ class EncOdomPublisher(Node):
     def __init__(self):
         super().__init__('enc_odom_publisher')
 
+        # Declare and get the parameter
+        self.declare_parameter('use_enc_tf', True)
+        self.use_enc_tf = self.get_parameter('use_enc_tf').value
+
         # Initialize pose
         self.x = 0.0
         self.y = 0.0
@@ -27,10 +31,11 @@ class EncOdomPublisher(Node):
         )
 
         # Publisher for odometry
-        self.odom_publisher = self.create_publisher(Odometry, 'odom', 10)
+        self.odom_publisher = self.create_publisher(Odometry, 'odom/encoder', 10)
 
-        # TF broadcaster
-        self.tf_broadcaster = TransformBroadcaster(self)
+        # TF broadcaster (only if use_enc_tf is True)
+        if self.use_enc_tf:
+            self.tf_broadcaster = TransformBroadcaster(self)
 
     def enc_vel_callback(self, msg):
         current_time = self.get_clock().now()
@@ -73,8 +78,9 @@ class EncOdomPublisher(Node):
         # Publish odometry
         self.odom_publisher.publish(odom_msg)
 
-        # Publish TF
-        self.publish_tf(current_time)
+        # Publish TF if enabled
+        if self.use_enc_tf:
+            self.publish_tf(current_time)
 
     def publish_tf(self, current_time):
         # Create transform
@@ -101,3 +107,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
